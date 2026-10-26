@@ -1,6 +1,6 @@
 ---
 name: summarize-outputs
-description: Summarize a directory of FAIR4AI evaluation JSONs into a compiled scores CSV, a summary figure, and a narrative Markdown report. By default ignores superseded (older) re-runs of a dataset, keeping only the newest per dataset. Invoke as /summarize-outputs, or whenever asked to summarize/compile/report across a folder of FAIR4AI evaluations. Also invoked by the batch-evaluate-datasets coordinator after it finishes evaluating.
+description: Summarize a directory of FAIR4AI evaluation JSONs into a compiled scores CSV, a summary figure, and a narrative Markdown report. By default ignores superseded (older) re-runs of a dataset, keeping only the newest per dataset. Invoke as /fair4ai-evaluator:summarize-outputs (Claude Code), or whenever asked to summarize/compile/report across a folder of FAIR4AI evaluations. Also invoked by the batch-evaluate-datasets coordinator after it finishes evaluating.
 ---
 
 You summarize a directory of FAIR4AI-Bio evaluation JSONs. You do **not** evaluate
@@ -11,6 +11,15 @@ this to include every run.
 
 The scoring, compilation, and figure are done by scripts; you author the narrative
 report and report to the user.
+
+## Plugin files
+
+This skill ships in the **`fair4ai-evaluator`** plugin. `<PLUGIN_ROOT>` below means the plugin's
+root directory, which is `${CLAUDE_PLUGIN_ROOT}`. If that is not an absolute path (your harness
+left the placeholder unexpanded), `<PLUGIN_ROOT>` is the directory two levels above this
+`SKILL.md` — the one holding `plugin.json`, `CHECKLIST.csv`, and `scripts/`. Resolve it to an
+absolute path once, quote it in shell commands, and treat it as **read-only**: never edit or
+add files there. Outputs go to the user's working directory or to the paths you are given.
 
 ## Step 1: Gather parameters
 
@@ -44,7 +53,7 @@ Run the compiler. `--source-csv` and `--confidence-map` are optional; `--dedup`
 defaults to `latest`:
 
 ```bash
-python scripts/compile_fair4ai_results.py \
+python "<PLUGIN_ROOT>/scripts/compile_fair4ai_results.py" \
   --results-dir "<results dir>" \
   --dedup <latest|all> \
   --out-csv "<output dir>/fair4ai_scores_summary_<LABEL>.csv" \
@@ -69,20 +78,20 @@ report. The CSV also carries per-row `agent_version`, `scored_with_version`, and
 ## Step 3: Build the summary figure (optional / graceful)
 
 ```bash
-python scripts/make_fair4ai_figure.py \
+python "<PLUGIN_ROOT>/scripts/make_fair4ai_figure.py" \
   --in-csv "<output dir>/fair4ai_scores_summary_<LABEL>.csv" \
   --out-base "<output dir>/fair4ai_score_distributions_<LABEL>" \
   --model "<model label>" --date <LABEL>
 ```
 
 This needs `numpy` + `matplotlib`. If it exits non-zero with an import error, report
-*"figure skipped — install `scripts/requirements-viz.txt`"* and **continue** (the CSV
+*"figure skipped — install `<PLUGIN_ROOT>/scripts/requirements-viz.txt`"* and **continue** (the CSV
 and report are still produced). Pass `--title` / `--subtitle` if custom text was given.
 
 ## Step 4: Author the narrative summary report
 
 Write **`<output dir>/FAIR4AI_summary_report_<LABEL>.md`**, mirroring the structure and
-tone of the reference reports (`example_outputs/` and prior runs). Include:
+tone of prior summary reports, if any are available. Include:
 
 - **Header** — label/date, checklist (89 items), **agent version(s)** (from AGG
   `by_agent_version`), evaluation model (the model label), summarizer model (this

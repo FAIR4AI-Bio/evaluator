@@ -229,7 +229,8 @@ evaluator.code-workspace
 **/.claude/settings.local.json
 
 # FAIR4AI evaluator run folders — throwaway batch/single-run/test artifacts, not source.
-# Skills default their output directory to the current working directory (this repo root).
+# Skills default their output directory to the current working directory, which is this repo
+# root when you develop the plugin from a clone (`claude --plugin-dir .`).
 /test_run*/
 /batch_run_*/
 /fair4ai_run_*/

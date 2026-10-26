@@ -1,6 +1,7 @@
 ---
 name: batch-evaluate-datasets
-description: Coordinate a batch FAIR4AI-Bio evaluation of many datasets by dispatching one sub-agent per dataset in parallel (default Claude Haiku 4.5). Reads a flexible dataset list (.txt/.csv/.md), saves all evaluation JSONs into one self-contained run folder, then hands off to the summarize-outputs skill for the scores CSV, summary figure, and Markdown report. Invoke as /batch-evaluate-datasets, or whenever asked to evaluate a list/CSV of datasets or run a batch.
+description: Coordinate a batch FAIR4AI-Bio evaluation of many datasets by dispatching one sub-agent per dataset in parallel (default Claude Haiku 4.5). Reads a flexible dataset list (.txt/.csv/.md), saves all evaluation JSONs into one self-contained run folder, then hands off to the summarize-outputs skill for the scores CSV, summary figure, and Markdown report. Invoke as /fair4ai-evaluator:batch-evaluate-datasets (Claude Code), or whenever asked to evaluate a list/CSV of datasets or run a batch.
+compatibility: Parallel dispatch needs a harness with sub-agents (e.g. Claude Code); without them, evaluate the datasets one at a time.
 ---
 
 You are the **coordinator** for a batch FAIR4AI-Bio evaluation. You read a list of datasets,
@@ -12,6 +13,20 @@ Every artifact of a run lives inside one **run folder** so a run is self-contain
 You (the coordinator) run the orchestration and own the progress tracker
 (`batch_evaluate_progress.md`). The per-dataset evaluations are done by sub-agents; the
 cross-dataset summary (scoring compilation, figure, and report) is done by `summarize-outputs`.
+Both sibling skills ship in the same plugin; in Claude Code they are invoked as
+`fair4ai-evaluator:evaluate-dataset` and `fair4ai-evaluator:summarize-outputs`.
+
+If your harness cannot launch sub-agents, run the same per-dataset workflow yourself, one dataset
+at a time, in Step 6 (each "wave" is then a single dataset); everything else is unchanged.
+
+## Plugin files
+
+This skill ships in the **`fair4ai-evaluator`** plugin. `<PLUGIN_ROOT>` below means the plugin's
+root directory, which is `${CLAUDE_PLUGIN_ROOT}`. If that is not an absolute path (your harness
+left the placeholder unexpanded), `<PLUGIN_ROOT>` is the directory two levels above this
+`SKILL.md` — the one holding `plugin.json`, `CHECKLIST.csv`, and `scripts/`. Resolve it to an
+absolute path once, quote it in shell commands, and treat it as **read-only**: never edit or
+add files there. Outputs go to the user's working directory or to the paths you are given.
 
 ---
 
@@ -28,10 +43,10 @@ Press Enter to accept the default for any optional parameter.
 1. **Dataset list** *(required)* — path to a `.txt`, `.csv`, or `.md` file listing datasets and
    their URLs (any layout; see Step 4).
 2. **Run folder** *(optional)* — directory that will hold every artifact of this run.
-   Default: `batch_run_<YYYY-MM-DD>/` in the current working directory.
-3. **Checklist file** *(optional)* — Default: `CHECKLIST.csv` in the current working directory.
+   Default: `batch_run_<YYYY-MM-DD>/` in the current working directory (the user's project folder).
+3. **Checklist file** *(optional)* — Default: `<PLUGIN_ROOT>/CHECKLIST.csv` (bundled with the plugin).
 4. **Template file** *(optional)* — Default:
-   `example_outputs/FAIR4AI_eval_neon_beetles_2026-08-21_120000.json`.
+   `<PLUGIN_ROOT>/example_outputs/FAIR4AI_eval_neon_beetles_2026-08-21_120000.json`.
 5. **Run date** *(optional)* — Default: today, `YYYY-MM-DD`.
 6. **Wave size** *(optional)* — how many sub-agents to run concurrently. Default: `5`.
 7. **Report title / subtitle** *(optional)* — Defaults derived from the dataset count and date.
@@ -48,7 +63,7 @@ Look at the resolved run folder:
   datasets are already ✅ complete (a valid evaluation JSON exists for them — verify per the
   Validation checklist) and which are ⏳ pending / ⚠️ / ⛔. You will **resume**: only pending and
   failed datasets get (re)launched in Step 6. Do not re-evaluate completed ones. If the tracker's
-  **Agent version** differs from the current repo-root `VERSION` (`python scripts/fair4ai_version.py`),
+  **Agent version** differs from the current plugin version (`python "<PLUGIN_ROOT>/scripts/fair4ai_version.py"`),
   warn the user that resuming will mix agent versions in one run and ask whether to continue.
 - **Otherwise**, create the run folder with two subfolders inside it: `evaluation_results/`
   (per-dataset JSONs) and `retrieved_metadata/` (per-dataset cached metadata).
@@ -93,7 +108,7 @@ list and **confirm before launching** any sub-agents.
 
 - Run the scorer selftest and require it to pass before spending model calls:
   ```bash
-  python scripts/compute_fair4ai_scores.py --selftest
+  python "<PLUGIN_ROOT>/scripts/compute_fair4ai_scores.py" --selftest
   ```
   Invoke every Python call in this skill with the `python` command exactly as written —
   never `python3` (on Windows it may resolve to the Microsoft Store redirector and open the
@@ -112,8 +127,11 @@ WebFetch throttling on large lists.
 Each sub-agent uses the **chosen model** and gets a prompt that:
 
 1. States: *"Operate in **Batch / non-interactive mode** per the `evaluate-dataset` skill
-   (`.claude/skills/evaluate-dataset/SKILL.md`). Do not ask the user anything."*
+   (`<PLUGIN_ROOT>/skills/evaluate-dataset/SKILL.md` — read it if the skill is not already loaded).
+   Do not ask the user anything."* Write `<PLUGIN_ROOT>` as the resolved absolute path: sub-agents
+   do not get the plugin-root placeholder expanded for them.
 2. Supplies the resolved evaluate-dataset parameters for this dataset, **as absolute paths**:
+   - **Plugin root** = `<PLUGIN_ROOT>` (absolute path; the helper scripts are in its `scripts/`)
    - **Dataset source** = the row's `url`
    - **Checklist file** = the batch checklist file (absolute path)
    - **Template file** = the batch template file (absolute path)
@@ -127,24 +145,24 @@ Each sub-agent uses the **chosen model** and gets a prompt that:
      location and write the evaluation JSON into the Output directory.
 3. Requires the sub-agent to end by (a) producing the evaluation JSON via the blessed helper scripts
    (`build_response_scaffold.py` → per-section `merge_ratings.py`, per `evaluate-dataset` Steps 3–6),
-   (b) running `python scripts/compute_fair4ai_scores.py <that file>` to populate scores, and (c)
+   (b) running `python "<PLUGIN_ROOT>/scripts/compute_fair4ai_scores.py" <that file>` to populate scores, and (c)
    returning the **Structured result contract** (below) as its final message.
 4. States the **Interpreter rule**: *"Run all Python via the `python` command exactly as
    written. Do **not** call `python3`, `pip`, `py -m pip`, or `python -m venv`, and never trigger
    any Python installer — the scripts are stdlib-only and need no install. If `python` is
-   unavailable, use `py -3`, never `python3`."* (On this machine `python3` resolves to the
-   Microsoft Store App-Installer redirector and pops the "Python install manager".)
+   unavailable, use `py -3`, never `python3`."* (On Windows `python3` may resolve to the
+   Microsoft Store App-Installer redirector and pop the "Python install manager".)
 5. States the **File-hygiene rule**: *"Use the absolute paths given above. Do not rely on the
    current working directory, do not read `CHECKLIST.csv` by a bare relative name, and do not `cd`
-   into the agent source tree. You **may invoke** the committed helper scripts in `scripts/` by
-   absolute path — `build_response_scaffold.py`, `merge_ratings.py`, and `compute_fair4ai_scores.py`
+   into the plugin directory. You **may invoke** the committed helper scripts in
+   `<PLUGIN_ROOT>/scripts/` by absolute path — `build_response_scaffold.py`, `merge_ratings.py`, and `compute_fair4ai_scores.py`
    — that is how the evaluation JSON is produced; you may **not author your own** `.py` scripts. Your
    only writes are inside the run folder: retrieved metadata under the **Metadata save location**
    (`retrieved_metadata/<short_name>/`), **exactly one evaluation JSON** in the supplied **Output
    directory** (`evaluation_results/`, produced by the scaffold + merge scripts), and the small
    per-section **ratings/session/summary batch files** you feed the scripts (keep those under
    `<output dir>/_ratings/`). Do **not** create renamed/duplicate evaluation JSONs or scratch notes,
-   and **never** write into the agent source tree (this `evaluator` repo, where `CHECKLIST.csv`, the
+   and **never** write into the plugin directory (`<PLUGIN_ROOT>`, where `CHECKLIST.csv`, the
    skills, and `scripts/` live) outside the run folder."* (Real runs left stray `eval_*.py` / `*_evaluation.json` files in
    the agent repo — the location discipline here prevents that; the blessed scripts are committed,
    stdlib, absolute-path tools, the opposite of those ad-hoc generators.)
@@ -169,7 +187,7 @@ Re-run the scorer on each file (use the sub-agent's returned `output_path`, i.e.
 `<run folder>/evaluation_results/FAIR4AI_eval_<short>_<TS>.json`) to guarantee reproducible scores
 and **zero `WARNING:`**:
 ```bash
-python scripts/compute_fair4ai_scores.py <output_path>
+python "<PLUGIN_ROOT>/scripts/compute_fair4ai_scores.py" <output_path>
 ```
 Resolve any warning (e.g. a scoreable item missing its `fair_category`) and re-run. **Policy:**
 if a dataset fails validation, relaunch its sub-agent once; if it still fails, mark it ⛔ in the
@@ -244,7 +262,7 @@ A dataset's evaluation JSON is **valid** only if all hold:
 - [ ] every response `status` ∈ `{meets, partial, does not meet, N/A}`;
 - [ ] every response carries a `fair_category` and an `ai_fair_criteria` (both copied verbatim from the CSV);
 - [ ] `summary.fair4ai_scores.traditional_fair.overall` and `.ai_fair.overall` both exist and are non-null;
-- [ ] `session.agent_provenance.agent_version` equals the current `VERSION` (stamped by the scaffold, so a
+- [ ] `session.agent_provenance.agent_version` equals the current plugin `VERSION` (stamped by the scaffold, so a
   missing or different value means the sub-agent skipped the scaffold);
 - [ ] re-running `compute_fair4ai_scores.py` on it prints **no `WARNING:`**.
 
@@ -258,7 +276,7 @@ A dataset's evaluation JSON is **valid** only if all hold:
 **Run date:** <DATE>
 **Evaluation model:** <chosen model>  ·  **Coordinator:** <session model>
 **Checklist:** <checklist file> (89 items)  ·  **Wave size:** <n>
-**Agent version:** <output of `python scripts/fair4ai_version.py`>  ·  **Commit:** <git rev-parse --short HEAD>
+**Agent version:** <`agent_version` from `python "<PLUGIN_ROOT>/scripts/fair4ai_version.py" --json`>  ·  **Commit:** <its `git_commit`, or `n/a` when the plugin is not a git checkout>
 
 Status legend: ⏳ pending · ✅ complete · ⚠️ needs attention · ⛔ failed
 

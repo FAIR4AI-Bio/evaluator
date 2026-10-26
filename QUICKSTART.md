@@ -1,6 +1,6 @@
-# Quickstart: `/evaluate-dataset`
+# Quickstart: `evaluate-dataset`
 
-This skill evaluates a biodiversity, ecology, or environmental science dataset against the FAIR4AI-Bio checklist and produces a structured JSON evaluation report. Invoke it as `/evaluate-dataset`.
+This skill evaluates a biodiversity, ecology, or environmental science dataset against the FAIR4AI-Bio checklist and produces a structured JSON evaluation report. It ships in the **`fair4ai-evaluator`** plugin; in Claude Code invoke it as `/fair4ai-evaluator:evaluate-dataset`.
 
 ---
 
@@ -12,10 +12,17 @@ The agent reads the checklist CSV, fetches or reads the dataset's metadata, and 
 
 ## How to invoke it
 
-In the Claude Code chat, type:
+Install the plugin once (see the README's *Setup* for other clients):
 
 ```
-/evaluate-dataset
+/plugin marketplace add FAIR4AI-Bio/evaluator
+/plugin install fair4ai-evaluator@fair4ai-bio
+```
+
+Then, from any project folder, type in the Claude Code chat:
+
+```
+/fair4ai-evaluator:evaluate-dataset
 ```
 
 The agent will immediately prompt you for the parameters it needs.
@@ -29,9 +36,9 @@ The agent will ask for six inputs. Only #1 is required — hit Enter to accept t
 | # | Parameter | Required? | Default |
 |---|-----------|-----------|---------|
 | 1 | **Dataset source** — URL to a landing page, or local path to a directory of metadata files | Yes | — |
-| 2 | **Checklist file** — path to the checklist CSV | No | `CHECKLIST.csv` in the current directory |
-| 3 | **Template file** — path to the output structure template JSON | No | `example_outputs/FAIR4AI_eval_neon_beetles_2026-08-21_120000.json` in the current directory |
-| 4 | **Output directory** — the workspace root where run folders are created | No | Current working directory |
+| 2 | **Checklist file** — path to the checklist CSV | No | `CHECKLIST.csv` bundled with the plugin |
+| 3 | **Template file** — path to the output structure template JSON | No | `example_outputs/FAIR4AI_eval_neon_beetles_2026-08-21_120000.json` bundled with the plugin |
+| 4 | **Output directory** — the workspace root where run folders are created | No | Current working directory (your project folder) |
 | 5 | **Output filename** | No | `FAIR4AI_eval_<short_name>_<YYYY-MM-DD_HHMMSS>.json` |
 | 6 | **Rerun existing evaluation?** — re-evaluate a dataset already evaluated in the Output directory | No | No |
 
@@ -98,7 +105,7 @@ One object per checklist item, in checklist-CSV order. Each response contains:
 
 ### Evaluating from a URL
 ```
-/evaluate-dataset
+/fair4ai-evaluator:evaluate-dataset
 
 Dataset source: https://data.neonscience.org/data-products/DP1.10022.001
 Checklist file: [Enter]
@@ -113,7 +120,7 @@ Output file: `fair4ai_run_2026-04-30_142530/evaluation_results/FAIR4AI_eval_neon
 
 ### Evaluating from local metadata files
 ```
-/evaluate-dataset
+/fair4ai-evaluator:evaluate-dataset
 
 Dataset source: C:/Users/me/datasets/my-beetle-survey/metadata/
 Checklist file: [Enter]
@@ -126,7 +133,7 @@ Output filename: FAIR4AI_eval_my-beetle-survey.json
 
 ### Using a custom checklist
 ```
-/evaluate-dataset
+/fair4ai-evaluator:evaluate-dataset
 
 Dataset source: https://www.gbif.org/dataset/abc123
 Checklist file: C:/projects/FAIR4AI/updated_checklist_v2.csv
@@ -155,7 +162,7 @@ To re-evaluate the same dataset after making improvements, answer **Yes** to *Re
 To evaluate a whole list of datasets in one run, use the companion skill:
 
 ```
-/batch-evaluate-datasets
+/fair4ai-evaluator:batch-evaluate-datasets
 ```
 
 **Input** — point it at a dataset list in any of three formats:
@@ -168,7 +175,7 @@ artifact), then asks which model the per-dataset sub-agents should use — defau
 (`claude-haiku-4-5-20251001`). See `example_inputs/` for ready-to-use `.csv` and `.md` samples.
 
 **What it does** — as a **coordinator**, it launches one sub-agent per dataset in parallel (waves of
-5), each running `/evaluate-dataset` non-interactively, validates every result (89 responses, valid
+5), each running `evaluate-dataset` non-interactively, validates every result (89 responses, valid
 statuses, non-null scores), then **hands off to the `summarize-outputs` skill** for the compiled CSV,
 figure, and report.
 
@@ -181,18 +188,18 @@ and a `batch_evaluate_progress.md` tracker. Re-invoking the skill on an existing
 **resumes** — only pending/failed datasets are re-run. Timestamped filenames mean re-runs never
 collide, and `summarize-outputs` keeps only the newest run of each dataset by default.
 
-> The summary figure needs `numpy` + `matplotlib` (`pip install -r scripts/requirements-viz.txt`).
+> The summary figure needs `numpy` + `matplotlib` (`pip install -r <plugin dir>/scripts/requirements-viz.txt`).
 > If they're missing, the figure is skipped and the CSV + report are still produced.
 
 ---
 
-## Summarizing on its own — `/summarize-outputs`
+## Summarizing on its own — `summarize-outputs`
 
 You can also summarize **any directory of evaluation JSONs** (a batch run folder's
 `evaluation_results/`, or a folder of single-run outputs) without re-evaluating:
 
 ```
-/summarize-outputs
+/fair4ai-evaluator:summarize-outputs
 ```
 
 It compiles a scores CSV, builds the summary figure (graceful skip if numpy/matplotlib are absent),
@@ -209,8 +216,8 @@ strictly comparable.
 
 - **New checklist items**: add rows to the checklist CSV following the existing column structure. `build_response_scaffold.py` reads the CSV fresh each run, so new rows flow into the scaffold (and the rating guide) automatically.
 - **New output fields**: edit `scripts/build_response_scaffold.py` (`RESPONSE_FIELDS` and the field-fill logic), which owns the `responses[]` schema, and keep `scripts/merge_ratings.py`/`compute_fair4ai_scores.py` and `tests/test_scaffold_and_merge.py` in sync. The template JSON is now just a human-readable structural reference.
-- **Bumping the version**: when you change the checklist, rubric, skills or scoring, update the `VERSION` file and add an entry to `CHANGELOG.md` — MAJOR if checklist items or scoring rules change (scores no longer comparable), MINOR for features or rating-affecting rubric/skill changes, PATCH for fixes and docs — then tag the release commit `v<version>`. `tests/test_versioning.py` fails if `CHANGELOG.md` has no entry for the current version.
-- **Changing defaults**: update the checklist filename or template filename in `.claude/skills/evaluate-dataset/SKILL.md` under the "Gather parameters" step.
+- **Bumping the version**: when you change the checklist, rubric, skills or scoring, update the `VERSION` file and add an entry to `CHANGELOG.md` — MAJOR if checklist items or scoring rules change (scores no longer comparable), MINOR for features or rating-affecting rubric/skill changes, PATCH for fixes and docs — and the `version` in `plugin.json`, `.claude-plugin/plugin.json`, and `.claude-plugin/marketplace.json`, then tag the release commit `v<version>`. `tests/test_versioning.py` fails if `CHANGELOG.md` has no entry for the current version, and `tests/test_plugin_layout.py` fails if a manifest version disagrees with `VERSION`.
+- **Changing defaults**: update the checklist filename or template filename in `skills/evaluate-dataset/SKILL.md` under the "Gather parameters" step.
 
 ---
 
@@ -218,11 +225,13 @@ strictly comparable.
 
 | File | Role |
 |------|------|
-| `.claude/skills/retrieve-metadata/SKILL.md` | The `/retrieve-metadata` skill (fetch + cache metadata into `retrieved_metadata/<short_name>/`) |
-| `.claude/skills/evaluate-dataset/SKILL.md` | The `/evaluate-dataset` skill and evaluation workflow (run folder, skip/rerun, downloaded-first; also supports Batch / non-interactive mode) |
-| `.claude/skills/fair4ai-scoring/SKILL.md` | The `/fair4ai-scoring` skill (deterministic 0–1 scoring) |
-| `.claude/skills/batch-evaluate-datasets/SKILL.md` | The `/batch-evaluate-datasets` coordinator skill (parallel per-dataset evals → hands off to `summarize-outputs`) |
-| `.claude/skills/summarize-outputs/SKILL.md` | The `/summarize-outputs` skill (compile any results dir → CSV + figure + report, dedups reruns) |
+| `.claude-plugin/plugin.json` / `plugin.json` | Plugin manifests (Claude Code / vendor-neutral Agent Plugins) |
+| `.claude-plugin/marketplace.json` | One-plugin marketplace used by `/plugin marketplace add FAIR4AI-Bio/evaluator` |
+| `skills/retrieve-metadata/SKILL.md` | The `retrieve-metadata` skill (fetch + cache metadata into `retrieved_metadata/<short_name>/`) |
+| `skills/evaluate-dataset/SKILL.md` | The `evaluate-dataset` skill and evaluation workflow (run folder, skip/rerun, downloaded-first; also supports Batch / non-interactive mode) |
+| `skills/fair4ai-scoring/SKILL.md` | The `fair4ai-scoring` skill (deterministic 0–1 scoring) |
+| `skills/batch-evaluate-datasets/SKILL.md` | The `batch-evaluate-datasets` coordinator skill (parallel per-dataset evals → hands off to `summarize-outputs`) |
+| `skills/summarize-outputs/SKILL.md` | The `summarize-outputs` skill (compile any results dir → CSV + figure + report, dedups reruns) |
 | `scripts/build_response_scaffold.py` | Builds the scaffold JSON (89 responses, verbatim fields pre-filled) and emits the compact per-section rating guide; run at Step 3 of an evaluation |
 | `scripts/merge_ratings.py` | Merges a section's `{item, status, evidence, notes, recommendation}` ratings into the scaffold in place (one call per section → incremental, resumable writes); pass `--checklist CHECKLIST.csv` to enforce the "Never NA" guard (mandatory items can't be rated `N/A`) |
 | `scripts/compute_fair4ai_scores.py` | Scoring tool the fair4ai-scoring skill runs |
@@ -232,7 +241,7 @@ strictly comparable.
 | `VERSION` / `CHANGELOG.md` | The agent version and its change history |
 | `example_inputs/` | Sample `.csv` / `.md` batch input lists |
 | `RATING_RUBRIC.md` | Authority for the `meets / partial / does not meet / N/A` rating |
-| `CLAUDE.md` | Project context auto-loaded by Claude Code each session |
+| `AGENTS.md` / `CLAUDE.md` | Contributor guide for developing the plugin (not loaded for plugin users) |
 | `CHECKLIST.csv` | Default checklist source |
 | `example_outputs/FAIR4AI_eval_neon_beetles_2026-08-21_120000.json` | Default output template (current schema) |
 | `CHECKLIST_OVERVIEW.md` | Human-readable checklist summary (reference) |

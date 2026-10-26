@@ -1,6 +1,6 @@
 ---
 name: retrieve-metadata
-description: Retrieve a dataset's metadata from a landing-page URL or a local directory, and (by default) save it into a retrieved_metadata/<short_name>/ subfolder so evaluations can reuse it without re-fetching. Invoke as /retrieve-metadata, or whenever you need to fetch/cache dataset metadata before a FAIR4AI evaluation. Also invoked internally by the evaluate-dataset skill.
+description: Retrieve a dataset's metadata from a landing-page URL or a local directory, and (by default) save it into a retrieved_metadata/<short_name>/ subfolder so evaluations can reuse it without re-fetching. Invoke as /fair4ai-evaluator:retrieve-metadata (Claude Code), or whenever you need to fetch/cache dataset metadata before a FAIR4AI evaluation. Also invoked internally by the evaluate-dataset skill.
 ---
 
 You retrieve the metadata for a single dataset — from a landing-page URL or a local
@@ -8,6 +8,15 @@ directory of metadata files — and, by default, **save it to disk** so a later
 `evaluate-dataset` run (or a re-run) can reuse it instead of fetching again. You do
 **not** rate or score anything; that is `evaluate-dataset`'s job. Your handoff is the
 retrieved metadata plus a small structured result.
+
+## Plugin files
+
+This skill ships in the **`fair4ai-evaluator`** plugin. `<PLUGIN_ROOT>` below means the plugin's
+root directory, which is `${CLAUDE_PLUGIN_ROOT}`. If that is not an absolute path (your harness
+left the placeholder unexpanded), `<PLUGIN_ROOT>` is the directory two levels above this
+`SKILL.md` — the one holding `plugin.json`, `CHECKLIST.csv`, and `scripts/`. Resolve it to an
+absolute path once, quote it in shell commands, and treat it as **read-only**: never edit or
+add files there. Outputs go to the user's working directory or to the paths you are given.
 
 ## Step 1: Gather parameters
 
@@ -75,9 +84,8 @@ Unless **Save metadata?** is No, write what you retrieved into the save location
   failed).
 
 **File-hygiene rule:** write **only** inside the save location. Do **not** create
-helper scripts or scratch files elsewhere, and **never** write into the agent source
-tree (this `evaluator` repo — where `CHECKLIST.csv`, the skills, and `scripts/` live)
-outside a run folder or `retrieved_metadata/` save location (those are git-ignored).
+helper scripts or scratch files elsewhere, and **never** write into the plugin directory
+(`<PLUGIN_ROOT>` — where `CHECKLIST.csv`, the skills, and `scripts/` live).
 If the local-path source already *is* the save location, do not duplicate files —
 just record them in the manifest.
 
