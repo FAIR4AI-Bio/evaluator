@@ -201,7 +201,7 @@ cython_debug/
 #   can be found at https://github.com/github/gitignore/blob/main/Global/VisualStudioCode.gitignore
 #   and can be added to the global gitignore or merged into this file. However, if you prefer, you
 #   could uncomment the following to ignore the entire vscode folder
-# .vscode/
+.vscode/
 # Temporary file for partial code execution
 tempCodeRunnerFile.py
 
@@ -218,3 +218,21 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Mac System
+.DS_Store
+
+# Personal editor workspace file (may contain machine-specific folder paths)
+evaluator.code-workspace
+
+# AI tool local configuration — track skills and settings, ignore machine-specific local overrides
+**/.claude/settings.local.json
+
+# FAIR4AI evaluator run folders — throwaway batch/single-run/test artifacts, not source.
+# Skills default their output directory to the current working directory (this repo root).
+/test_run*/
+/batch_run_*/
+/fair4ai_run_*/
+/TEST_OUTPUT/
+/evaluate_progress.md
+/retrieved_metadata/
