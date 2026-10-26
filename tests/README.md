@@ -8,7 +8,7 @@ Two kinds of things are pinned down here:
    metadata retrieved once (via the `retrieve-metadata` skill) for each example dataset, plus a
    `retrieval_manifest.json`. Committing these makes evaluations reproducible **without re-fetching
    from the network** — the evaluation reads from disk.
-2. **A deterministic validation suite** — three test modules, all stdlib-only:
+2. **A deterministic validation suite** — four test modules, all stdlib-only:
    - `test_example_outputs.py` checks that the committed example outputs in `example_outputs/` are
      structurally valid for the current **89-item** `CHECKLIST.csv` and that the scorer reproduces
      their stored scores.
@@ -26,6 +26,10 @@ Two kinds of things are pinned down here:
      `session.agent_provenance` stamp is written, survives (and can't be forged by) the session
      merge, gains `scored_with_*` from the scorer, and reaches the compiled CSV/aggregates. A
      pre-versioning evaluation is scored with a warning and `null` provenance fields.
+   - `test_plugin_layout.py` checks the plugin packaging: the Agent Plugins `plugin.json` uses only
+     allowed keys and a valid name, all three manifests agree with `VERSION`, every
+     `skills/*/SKILL.md` has Agent Skills frontmatter matching its folder, and no skill reaches
+     bundled files through paths relative to the working directory.
 
 The evaluation itself is produced by an LLM (a **Sonnet** sub-agent), so it is *not*
 deterministic — the suite therefore asserts **invariants**, not exact statuses/scores. Regenerating

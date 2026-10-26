@@ -1,9 +1,27 @@
 ---
 name: evaluate-dataset
-description: Evaluate a dataset for AI-readiness in biodiversity/ecology using the FAIR4AI-Bio checklist. Produces a structured JSON evaluation report. Invoke as /evaluate-dataset, or whenever asked to score/assess a dataset's FAIR4AI or AI-readiness.
+description: Evaluate a dataset for AI-readiness in biodiversity/ecology using the FAIR4AI-Bio checklist. Produces a structured JSON evaluation report. Invoke as /fair4ai-evaluator:evaluate-dataset (Claude Code), or whenever asked to score/assess a dataset's FAIR4AI or AI-readiness.
 ---
 
 You are evaluating a dataset for AI-readiness in biodiversity, ecology, and environmental science using the FAIR4AI-Bio checklist.
+
+## Plugin files
+
+This skill ships in the **`fair4ai-evaluator`** plugin. `<PLUGIN_ROOT>` below means the plugin's
+root directory, which is `${CLAUDE_PLUGIN_ROOT}`. If that is not an absolute path (your harness
+left the placeholder unexpanded), `<PLUGIN_ROOT>` is the directory two levels above this
+`SKILL.md` — the one holding `plugin.json`, `CHECKLIST.csv`, and `scripts/`. Resolve it to an
+absolute path once, quote it in shell commands, and treat it as **read-only**: never edit or
+add files there. Outputs go to the user's working directory or to the paths you are given.
+
+Sibling skills named below (`retrieve-metadata`, `fair4ai-scoring`, `batch-evaluate-datasets`)
+ship in the same plugin; in Claude Code they are invoked as `fair4ai-evaluator:<skill>`.
+
+**Interpreter rule:** run all Python via the `python` command exactly as written. Do **not** call
+`python3`, `pip`, `py -m pip`, or `python -m venv`, and never trigger any Python installer — the
+scripts are stdlib-only and need no install. If `python` is unavailable, use `py -3`, never
+`python3` (on Windows `python3` may resolve to the Microsoft Store redirector and open the
+install manager).
 
 ## Step 1: Gather parameters
 
@@ -17,13 +35,13 @@ Please provide the following. Press Enter to accept the default for any optional
 1. **Dataset source** *(required)* — URL to the dataset landing page, OR a local path to a directory containing dataset metadata files.
 
 2. **Checklist file** *(optional)* — Path to the checklist CSV.
-   Default: `CHECKLIST.csv` in the current working directory.
+   Default: `<PLUGIN_ROOT>/CHECKLIST.csv` (bundled with the plugin).
 
 3. **Template file** *(optional)* — Path to the output template JSON to use as structural reference.
-   Default: `example_outputs/FAIR4AI_eval_neon_beetles_2026-08-21_120000.json` in the current working directory (the current-schema example, with `fair_category` on every response and script-computed 0–1 `fair4ai_scores`).
+   Default: `<PLUGIN_ROOT>/example_outputs/FAIR4AI_eval_neon_beetles_2026-08-21_120000.json` (bundled with the plugin; the current-schema example, with `fair_category` on every response and script-computed 0–1 `fair4ai_scores`).
 
 4. **Output directory** *(optional)* — Workspace directory where this run's run folder will be created. Skip/reuse checks scan across the run folders it contains.
-   Default: current working directory.
+   Default: current working directory (the user's project folder).
 
 5. **Output filename** *(optional)* — Filename for the evaluation JSON.
    Default: auto-generated as `FAIR4AI_eval_<short_name>_<YYYY-MM-DD_HHMMSS>.json` (timestamp to the second, so re-runs never collide).
@@ -39,8 +57,8 @@ When you are invoked by a **batch coordinator** (the `batch-evaluate-datasets` s
 directly by a person, you will be given all parameters up front in your prompt. In that case:
 
 - **Skip Step 1's interactive prompt entirely.** Do not ask the user anything. Treat the supplied
-  values (dataset source, checklist file, template file, output directory, output filename, and
-  evaluator name/email) as the resolved parameters and proceed directly to Step 3.
+  values (dataset source, checklist file, template file, output directory, output filename,
+  evaluator name/email, and the plugin root) as the resolved parameters and proceed directly to Step 3.
 - **The coordinator already created the run folder.** Do **not** create a new run folder and do
   **not** run Step 2's skip check (the coordinator owns resume/skip via its progress tracker).
   Save any retrieved metadata into `<run folder>/retrieved_metadata/<short_name>/` (the sibling of
@@ -49,22 +67,17 @@ directly by a person, you will be given all parameters up front in your prompt. 
   `compute_fair4ai_scores.py`.
 - **File-hygiene rule (critical in batch mode):** use the **absolute paths** the coordinator gives
   you — the checklist and the **output directory**. Do **not** rely on the current working
-  directory: never read `CHECKLIST.csv` by a bare relative name, and never `cd` into the agent
-  source tree. Your only writes are **inside the run folder**: retrieved metadata under
+  directory: never read `CHECKLIST.csv` by a bare relative name, and never `cd` into the plugin
+  directory. If the coordinator supplies `<PLUGIN_ROOT>`, use that value. Your only writes are **inside the run folder**: retrieved metadata under
   `retrieved_metadata/<short_name>/`, the **evaluation JSON** in the supplied output directory, and
   the small per-section **ratings/session/summary batch files** you feed to the helper scripts
   (keep those under `<output dir>/_ratings/`). You **may invoke** the committed helper scripts in
-  `scripts/` by absolute path — `build_response_scaffold.py`, `merge_ratings.py`, and
+  `<PLUGIN_ROOT>/scripts/` by absolute path — `build_response_scaffold.py`, `merge_ratings.py`, and
   `compute_fair4ai_scores.py` — that is how the JSON is produced. You may **not author your own**
   `.py` scripts, create renamed/duplicate evaluation JSONs or scratch notes, or **ever** write into
-  the agent source tree (this `evaluator` repo — where `CHECKLIST.csv`, the skills, and `scripts/`
-  live). The one exception is the run folder itself (`fair4ai_run_*/` / `batch_run_*/`), which may
-  sit at the repo root when the output directory defaults to it; those folders are git-ignored.
-- **Interpreter rule:** run all Python via the `python` command exactly as written. Do **not**
-  call `python3`, `pip`, `py -m pip`, or `python -m venv`, and never trigger any Python installer
-  — the scripts are stdlib-only and need no install. If `python` is unavailable, use `py -3`,
-  never `python3` (on Windows `python3` may resolve to the Microsoft Store redirector and open the
-  install manager).
+  the plugin directory (`<PLUGIN_ROOT>` — where `CHECKLIST.csv`, the skills, and `scripts/` live)
+  outside the run folder.
+- **Interpreter rule:** as stated at the top — `python` only, never `python3`/`pip`/installers.
 - **End your turn by returning the structured result** below as your final message (in addition to
   producing the JSON file via Steps 3–7) — the coordinator parses this instead of re-opening your file:
 
@@ -128,7 +141,7 @@ empty — and (b) prints a **compact, per-section rating guide** (requirement + 
 condition) that you rate from:
 
 ```bash
-python scripts/build_response_scaffold.py \
+python "<PLUGIN_ROOT>/scripts/build_response_scaffold.py" \
   --checklist <checklist path> \
   --out <run folder>/evaluation_results/<output filename> \
   --emit-guide
@@ -136,7 +149,7 @@ python scripts/build_response_scaffold.py \
 
 Read the guide from the command's **stdout**. It groups all 89 items into their **9 `Broad
 categories` sections** and, per item, shows the `Requirement`, the item's **`N/A when`** condition,
-the `AI FAIR Criteria`, the `FAIR category`, and any `Note`. Also read **`RATING_RUBRIC.md`** once —
+the `AI FAIR Criteria`, the `FAIR category`, and any `Note`. Also read **`<PLUGIN_ROOT>/RATING_RUBRIC.md`** once —
 its §4 facet guidance (Structural / Scientific / Provenance / Governance) is your **authoritative
 philosophy** for deciding meets / partial / does not meet. This guide is your rating surface — you
 do **not** re-read the raw CSV, and you **never** edit the four verbatim fields (the scaffold owns
@@ -144,8 +157,8 @@ them, which keeps them exactly correct). Because every item already defaults to 
 Steps 4–5 is only to **override the exceptions** — the items that are `partial`, `does not meet`, or
 `N/A` — by producing their `status`, `evidence`, `notes`, and `recommendation`.
 
-The scaffold also stamps **`session.agent_provenance`** — the agent version (repo-root `VERSION`),
-the agent repo's git commit, and the SHA-256 of the checklist you passed. This block is
+The scaffold also stamps **`session.agent_provenance`** — the agent version (plugin-root `VERSION`),
+the plugin's git commit (`null` when the installed copy is not a git checkout), and the SHA-256 of the checklist you passed. This block is
 **script-owned**: never write or edit it yourself (Step 6's session merge carries it over, and
 Step 7's scorer adds the version that computed the scores).
 
@@ -206,10 +219,10 @@ For each section:
    tally and skip the merge for it.
 3. Merge it (always pass `--checklist` so the "Never NA" guard is active):
    ```bash
-   python scripts/merge_ratings.py \
+   python "<PLUGIN_ROOT>/scripts/merge_ratings.py" \
      --scaffold <run folder>/evaluation_results/<output filename> \
      --ratings <output dir>/_ratings/<section>.json \
-     --checklist CHECKLIST.csv
+     --checklist <checklist path>
    ```
    With `--checklist`, the merge **rejects** an `N/A` rating on any item whose `N/A when` cell reads
    "Never NA …" (mandatory for all datasets) — the enforcement behind the N/A rule below. It also
@@ -268,7 +281,7 @@ and the `summary` narrative (`strengths`, `gaps`, `overall_assessment`). Leave `
 Set both by handing `merge_ratings.py` small JSON files (do **not** re-Write the whole document):
 
 ```bash
-python scripts/merge_ratings.py \
+python "<PLUGIN_ROOT>/scripts/merge_ratings.py" \
   --scaffold <run folder>/evaluation_results/<output filename> \
   --session-json <output dir>/_ratings/session.json \
   --summary-json <output dir>/_ratings/summary.json
@@ -341,7 +354,7 @@ structure (do not omit any top-level key):
     },
     "agent_provenance": {
       "agent_version": "<from VERSION, e.g. 0.1.0 — stamped by build_response_scaffold.py>",
-      "git_commit": "<agent repo commit, or null>",
+      "git_commit": "<plugin git commit, or null>",
       "git_dirty": false,
       "checklist_file": "CHECKLIST.csv",
       "checklist_sha256": "<fingerprint of the checklist used>",
@@ -375,7 +388,7 @@ the `session`/`summary` narrative in Step 6; in Step 7 you compute `summary.fair
 deterministically by invoking the **`fair4ai-scoring`** skill:
 
 ```bash
-python scripts/compute_fair4ai_scores.py <output.json>
+python "<PLUGIN_ROOT>/scripts/compute_fair4ai_scores.py" <output.json>
 ```
 
 The skill computes `summary.fair4ai_scores` deterministically as **two assessments** (per item: `meets → 1`, `partial → 0.5`, `does not meet → 0`, `N/A`/blank → excluded; any all-N/A dimension/facet is `null` and omitted from means). All scores are **0–1, where 1 is "most FAIR4AI"**:
@@ -410,7 +423,7 @@ It writes this block back into the file:
    merges and the Step 6 session/summary merge, with `fair4ai_scores` still `{}`. This is the **only**
    evaluation file — the sole extra writes are the small batch files under `<output dir>/_ratings/`;
    do not emit a generator script, an intermediate/renamed JSON, or any other scratch file, and never
-   write into the agent source tree (this `evaluator` repo) outside the run folder. (Retrieved metadata already lives under
+   write into the plugin directory (`<PLUGIN_ROOT>`) outside the run folder. (Retrieved metadata already lives under
    `retrieved_metadata/<short_name>/` from Step 4.)
 2. Confirm the file is complete before scoring: all 89 `responses[]` are present with a valid
    `status` (they default to `meets`, so what matters is the **section-coverage check** from Step 5 —
@@ -420,7 +433,7 @@ It writes this block back into the file:
    yet merged.
 3. Compute the scores reproducibly by invoking the **`fair4ai-scoring`** skill on the file:
    ```bash
-   python scripts/compute_fair4ai_scores.py <output.json>
+   python "<PLUGIN_ROOT>/scripts/compute_fair4ai_scores.py" <output.json>
    ```
    This populates `summary.fair4ai_scores` with both assessments (Traditional FAIR + AI-FAIR, each 0–1 with per-dimension/facet `details`) and records the scorer's version in `session.agent_provenance.scored_with_version`. Resolve any `WARNING:` it prints (e.g., a scoreable item missing its `fair_category`, an unrecognized `criteria` value, or an item mapping to nothing) and re-run.
 4. Append an **"evaluated"** line to `<Output directory>/evaluate_progress.md` (see the log format in Step 2), noting the run folder, output file, and whether cached metadata was reused. *(Interactive mode only — in Batch mode the coordinator maintains its own progress tracker.)*

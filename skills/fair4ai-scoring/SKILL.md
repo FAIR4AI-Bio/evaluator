@@ -1,6 +1,6 @@
 ---
 name: fair4ai-scoring
-description: Compute reproducible, quantitative FAIR4AI scores (0-1) from a FAIR4AI evaluation JSON by running scripts/compute_fair4ai_scores.py. Use after per-item statuses are assigned, to populate summary.fair4ai_scores. Invoke whenever you need FAIR4AI dimension scores or an overall score for an evaluation.
+description: Compute reproducible, quantitative FAIR4AI scores (0-1) from a FAIR4AI evaluation JSON by running the plugin's scripts/compute_fair4ai_scores.py. Use after per-item statuses are assigned, to populate summary.fair4ai_scores. Invoke whenever you need FAIR4AI dimension scores or an overall score for an evaluation.
 ---
 
 # FAIR4AI scoring skill
@@ -9,19 +9,28 @@ Turn the per-item `meets | partial | does not meet | N/A` ratings in a FAIR4AI
 evaluation JSON into **quantitative, traceable, reproducible** scores. Scores are
 computed by a deterministic Python script — never estimate them by hand.
 
+## Plugin files
+
+This skill ships in the **`fair4ai-evaluator`** plugin. `<PLUGIN_ROOT>` below means the plugin's
+root directory, which is `${CLAUDE_PLUGIN_ROOT}`. If that is not an absolute path (your harness
+left the placeholder unexpanded), `<PLUGIN_ROOT>` is the directory two levels above this
+`SKILL.md` — the one holding `plugin.json`, `CHECKLIST.csv`, and `scripts/`. Resolve it to an
+absolute path once, quote it in shell commands, and treat it as **read-only**: never edit or
+add files there. Outputs go to the user's working directory or to the paths you are given.
+
 ## When to use
 
-- During `/evaluate-dataset`, after Step 4 (every response has a `status` and a
+- During `evaluate-dataset` (`/fair4ai-evaluator:evaluate-dataset` in Claude Code), after Step 4 (every response has a `status` and a
   `fair_category`) and before writing/reporting the file, to populate
   `summary.fair4ai_scores`.
 - Any time you need to (re)compute scores for an existing evaluation JSON.
 
 ## How to run
 
-From the agent directory:
+From any working directory:
 
 ```bash
-python scripts/compute_fair4ai_scores.py <path/to/eval.json>
+python "<PLUGIN_ROOT>/scripts/compute_fair4ai_scores.py" <path/to/eval.json>
 ```
 
 This computes the scores and **writes them back** into `summary.fair4ai_scores`.

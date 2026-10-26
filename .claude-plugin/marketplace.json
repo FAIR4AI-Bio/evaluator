@@ -1,0 +1,15 @@
+{
+  "name": "fair4ai-bio",
+  "owner": { "name": "FAIR4AI-Bio working group", "url": "https://github.com/FAIR4AI-Bio" },
+  "metadata": {
+    "description": "FAIR4AI-Bio tools for assessing the AI-readiness of biodiversity and environmental data."
+  },
+  "plugins": [
+    {
+      "name": "fair4ai-evaluator",
+      "source": "./",
+      "description": "Evaluate datasets for AI-readiness with the FAIR4AI-Bio checklist (Traditional FAIR + AI-FAIR scores).",
+      "version": "0.2.0"
+    }
+  ]
+}
