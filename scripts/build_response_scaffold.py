@@ -21,7 +21,9 @@ The agent then produces only its judgments and merges them in with merge_ratings
 
 Output schema matches the current example outputs exactly: an 8-field response object,
 a `session` block, and a `summary` skeleton with `fair4ai_scores` left as `{}` (the
-fair4ai-scoring skill fills it after ratings are merged).
+fair4ai-scoring skill fills it after ratings are merged). When writing `--out`, the
+script also stamps `session.agent_provenance` (agent version, git commit, and the
+checklist's SHA-256; see fair4ai_version.py).
 
 Stdlib only. Usage:
     python scripts/build_response_scaffold.py \
@@ -34,7 +36,11 @@ Stdlib only. Usage:
 import argparse
 import csv
 import json
+import os
 import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import fair4ai_version  # noqa: E402
 
 # The 8 fields of a current-schema response, in display order.
 RESPONSE_FIELDS = [
@@ -326,13 +332,15 @@ def main(argv=None):
             return 1
 
     doc = build_document(rows, colmap, session=session)
+    doc["session"][fair4ai_version.PROVENANCE_KEY] = fair4ai_version.scaffold_provenance(args.checklist)
 
     if args.out:
         with open(args.out, "w", encoding="utf-8") as f:
             json.dump(doc, f, indent=2, ensure_ascii=False)
             f.write("\n")
         print(f"Wrote scaffold with {len(doc['responses'])} responses "
-              f"(default status 'meets') -> {args.out}", file=sys.stderr)
+              f"(default status 'meets', agent v{fair4ai_version.get_version()}) -> {args.out}",
+              file=sys.stderr)
     else:
         print(f"(no --out given; built {len(doc['responses'])} responses)", file=sys.stderr)
 

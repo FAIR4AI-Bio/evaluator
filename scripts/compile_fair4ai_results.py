@@ -18,11 +18,14 @@ where `<TIMESTAMP>` is either a legacy date `YYYY-MM-DD` or a to-the-second
   - pulls each chosen JSON's title, the two-assessment 0-1 scores (Traditional FAIR:
     F/A/I/R + overall_fair; AI-FAIR: ml_ready/ai_ready_for_task/traceable/
     care_compliance + overall_ai_fair), per-status counts, and response count;
+  - records which agent version produced each evaluation (`agent_version`,
+    `scored_with_version`, and a 12-character `checklist_sha256` prefix, from
+    `session.agent_provenance`; blank for evaluations that predate versioning);
   - optionally joins a per-dataset confidence level from a confidence-map JSON;
   - writes a one-row-per-result summary CSV (sorted by AI-FAIR overall, high to low); and
   - prints an `AGG:{json}` line with cross-dataset aggregates (fair/ai-fair means, overall
-    means, n, missing list, superseded list, by-confidence groupings) that the summarizer
-    uses to author the summary report.
+    means, n, missing list, superseded list, by-confidence and by-agent-version groupings,
+    and a `mixed_versions` flag) that the summarizer uses to author the summary report.
 
 Stdlib-only (no third-party dependencies), so scoring/compilation never depends on
 the plotting stack. The figure is produced separately by `make_fair4ai_figure.py`.
@@ -52,8 +55,11 @@ CSV_COLS = [
     "findable", "accessible", "interoperable", "reusable", "overall_fair",
     "ml_ready", "ai_ready_for_task", "traceable", "care_compliance", "overall_ai_fair",
     "n_meets", "n_partial", "n_does_not_meet", "n_na", "confidence",
+    "agent_version", "scored_with_version", "checklist_sha256",
     "run_timestamp", "json_file",
 ]
+# Length of the checklist fingerprint prefix shown in the CSV (enough to tell versions apart).
+SHA_PREFIX = 12
 
 # FAIR4AI_eval_<short_name>_<TIMESTAMP>.json  where <TIMESTAMP> is
 # YYYY-MM-DD  or  YYYY-MM-DD_HHMMSS.  short_name may itself contain underscores
@@ -155,6 +161,7 @@ def build_row(short, meta, ts, jpath):
     tf = scores.get("traditional_fair", {}) or {}
     af = scores.get("ai_fair", {}) or {}
     counts = count_statuses(doc)
+    prov = (doc.get("session", {}) or {}).get("agent_provenance", {}) or {}
     return {
         "short_name": short,
         "title": (doc.get("session", {}).get("dataset", {}) or {}).get("title") or "",
@@ -166,6 +173,9 @@ def build_row(short, meta, ts, jpath):
         "overall_ai_fair": af.get("overall"),
         "counts": counts,
         "n_responses": len(doc.get("responses", [])),
+        "agent_version": prov.get("agent_version") or "",
+        "scored_with_version": prov.get("scored_with_version") or "",
+        "checklist_sha256": (prov.get("checklist_sha256") or "")[:SHA_PREFIX],
         "run_timestamp": ts or "",
         "json_file": os.path.basename(jpath),
     }
@@ -239,6 +249,7 @@ def main(argv=None):
                 r["ai"]["care_compliance"], r["overall_ai_fair"],
                 r["counts"]["meets"], r["counts"]["partial"], r["counts"]["does not meet"],
                 r["counts"]["N/A"], confidence.get(r["short_name"], ""),
+                r["agent_version"], r["scored_with_version"], r["checklist_sha256"],
                 r["run_timestamp"], r["json_file"],
             ])
     print("Wrote:", out_csv)
@@ -254,8 +265,19 @@ def main(argv=None):
         "ai_fair_means": {c: mean([r["ai"][c] for r in rows]) for c in AI_CATS},
         "overall_ai_fair_mean": mean([r["overall_ai_fair"] for r in rows]),
         "by_confidence": {},
+        "by_agent_version": {},
+        "checklist_sha256s": sorted({r["checklist_sha256"] for r in rows if r["checklist_sha256"]}),
+        "mixed_versions": False,
         "csv_path": out_csv,
     }
+    for r in rows:
+        agg["by_agent_version"].setdefault(r["agent_version"] or "unversioned", []).append(
+            r["short_name"])
+    for names in agg["by_agent_version"].values():
+        names.sort()
+    # Scores are only directly comparable within one agent version and one checklist.
+    agg["mixed_versions"] = (len(agg["by_agent_version"]) > 1
+                             or len(agg["checklist_sha256s"]) > 1)
     for level in ("high", "medium", "low", ""):
         names = sorted({r["short_name"] for r in rows
                         if (confidence.get(r["short_name"], "") or "") == level})
@@ -269,6 +291,10 @@ def main(argv=None):
     if superseded:
         print("Superseded (older runs ignored under --dedup latest):",
               ", ".join(f"{sn} [{fn}]" for (sn, fn) in superseded), file=sys.stderr)
+    if agg["mixed_versions"]:
+        print("WARNING: evaluations come from more than one agent version or checklist; "
+              "see AGG by_agent_version / checklist_sha256s before comparing scores",
+              file=sys.stderr)
     if missing:
         print("WARNING: no evaluation JSON found for:", ", ".join(missing),
               file=sys.stderr)

@@ -144,6 +144,11 @@ them, which keeps them exactly correct). Because every item already defaults to 
 Steps 4–5 is only to **override the exceptions** — the items that are `partial`, `does not meet`, or
 `N/A` — by producing their `status`, `evidence`, `notes`, and `recommendation`.
 
+The scaffold also stamps **`session.agent_provenance`** — the agent version (repo-root `VERSION`),
+the agent repo's git commit, and the SHA-256 of the checklist you passed. This block is
+**script-owned**: never write or edit it yourself (Step 6's session merge carries it over, and
+Step 7's scorer adds the version that computed the scores).
+
 ## Step 4: Obtain the dataset metadata (look for downloaded data first)
 
 Get the metadata to evaluate against, preferring already-available data over a fresh
@@ -269,7 +274,8 @@ python scripts/merge_ratings.py \
   --summary-json <output dir>/_ratings/summary.json
 ```
 
-`--session-json` replaces the top-level `session` block; `--summary-json` sets
+`--session-json` replaces the top-level `session` block, **except** `session.agent_provenance`,
+which it carries over from the scaffold (so leave that key out of `session.json`); `--summary-json` sets
 `summary.strengths`/`gaps`/`overall_assessment` (it never touches `fair4ai_scores`). Use `null` for
 unknown values in `session` rather than leaving fields empty. The two files carry exactly these
 shapes (the same structure the finished document uses below):
@@ -332,6 +338,15 @@ structure (do not omit any top-level key):
       "relationship_to_dataset": "<Data Provider/Producer | Processor | Host | Data User/Developer | Catalog Curator>",
       "evaluation_purpose": "<publishing for others | open-ended use | use in a specific project>",
       "evaluation_description": "<brief description of what sources were used and any retrieval limitations>"
+    },
+    "agent_provenance": {
+      "agent_version": "<from VERSION, e.g. 0.1.0 — stamped by build_response_scaffold.py>",
+      "git_commit": "<agent repo commit, or null>",
+      "git_dirty": false,
+      "checklist_file": "CHECKLIST.csv",
+      "checklist_sha256": "<fingerprint of the checklist used>",
+      "scored_with_version": "<stamped by compute_fair4ai_scores.py>",
+      "scored_with_commit": "<stamped by compute_fair4ai_scores.py>"
     }
   },
   "responses": [
@@ -407,10 +422,11 @@ It writes this block back into the file:
    ```bash
    python scripts/compute_fair4ai_scores.py <output.json>
    ```
-   This populates `summary.fair4ai_scores` with both assessments (Traditional FAIR + AI-FAIR, each 0–1 with per-dimension/facet `details`). Resolve any `WARNING:` it prints (e.g., a scoreable item missing its `fair_category`, an unrecognized `criteria` value, or an item mapping to nothing) and re-run.
+   This populates `summary.fair4ai_scores` with both assessments (Traditional FAIR + AI-FAIR, each 0–1 with per-dimension/facet `details`) and records the scorer's version in `session.agent_provenance.scored_with_version`. Resolve any `WARNING:` it prints (e.g., a scoreable item missing its `fair_category`, an unrecognized `criteria` value, or an item mapping to nothing) and re-run.
 4. Append an **"evaluated"** line to `<Output directory>/evaluate_progress.md` (see the log format in Step 2), noting the run folder, output file, and whether cached metadata was reused. *(Interactive mode only — in Batch mode the coordinator maintains its own progress tracker.)*
 5. Report to the user:
    - Full path of the output file written (and the run folder)
+   - The agent version that produced it (`session.agent_provenance.agent_version`)
    - Total checklist items evaluated
    - Count breakdown by status (meets / partial / does not meet / N/A)
    - Both **0–1** headline scores — **Overall FAIR** and **Overall AI-FAIR** — plus the four AI-FAIR categories (ml_ready, ai_ready_for_task, traceable, care_compliance), noting they are script-computed (reproducible), not estimated. Call out the FAIR-vs-AI-FAIR gap if present.

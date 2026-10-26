@@ -83,11 +83,44 @@ All five capabilities live under `.claude/skills/` (one skill per directory, eac
 
 ---
 
+## Versioning
+
+The agent is versioned with [semantic versioning](https://semver.org/). The current version is in the
+repo-root **`VERSION`** file (currently **0.1.0**; print it with `python scripts/fair4ai_version.py`),
+each release is tagged `v<version>` in git, and **`CHANGELOG.md`** lists what changed. A **MAJOR**
+bump means the checklist items or scoring rules changed, so scores are no longer comparable with
+earlier versions; **MINOR** covers new features or rubric/skill changes that may shift ratings;
+**PATCH** covers fixes and documentation.
+
+Every evaluation records which version produced it in `session.agent_provenance`:
+
+```json
+"agent_provenance": {
+  "agent_version": "0.1.0",
+  "git_commit": "<full commit of this repo>",
+  "git_dirty": false,
+  "checklist_file": "CHECKLIST.csv",
+  "checklist_sha256": "<fingerprint of the checklist used>",
+  "scored_with_version": "0.1.0",
+  "scored_with_commit": "<commit of the scorer>"
+}
+```
+
+The scripts fill this in, not the AI model: `build_response_scaffold.py` stamps the first five
+fields, `merge_ratings.py` keeps them when the session block is replaced, and
+`compute_fair4ai_scores.py` adds `scored_with_*`. The checklist fingerprint ignores line endings, so
+Windows and Linux checkouts of the same checklist match. Evaluations made before versioning have no
+stamp; re-scoring one warns and records the unknown fields as `null`. The compiled scores CSV has
+`agent_version`, `scored_with_version` and `checklist_sha256` columns, and `summarize-outputs` flags
+any run that mixes agent or checklist versions.
+
+---
+
 ## Output format
 
 The JSON report has three top-level sections:
 
-- **`session`** — evaluation date, AI model, metadata sources used, dataset identity (title, DOI, landing page URL, citation), and evaluator information
+- **`session`** — evaluation date, AI model, metadata sources used, dataset identity (title, DOI, landing page URL, citation), evaluator information, and `agent_provenance` (agent version, git commit, checklist fingerprint; see [Versioning](#versioning))
 - **`responses`** — one object per checklist item with `item`, `requirement_definition`, `status` (`meets` / `partial` / `does not meet` / `N/A`), `evidence`, `notes`, `recommendation`, `fair_category` (the FAIR dimension(s) the item counts toward), and `ai_fair_criteria` (the Structural/Scientific/Provenance/Governance facet(s) it counts toward)
 - **`summary`** — `strengths`, `gaps`, `overall_assessment` (2–3 sentence narrative), and `fair4ai_scores` (two nested blocks — `traditional_fair` and `ai_fair`, each with an overall score in 0–1 and per-dimension/per-facet `details`/`components` counts) computed by the `fair4ai-scoring` skill
 
@@ -110,10 +143,13 @@ See `example_outputs/` for complete examples.
 | `scripts/build_response_scaffold.py` | Builds the 89-item evaluation scaffold JSON with verbatim checklist fields, plus a compact per-section rating guide (stdlib-only) |
 | `scripts/merge_ratings.py` | Merges per-section ratings into the scaffold in place, with status validation and the "Never NA" guard (stdlib-only) |
 | `scripts/compute_fair4ai_scores.py` | Deterministic 0–1 FAIR4AI scoring tool (stdlib-only) |
-| `scripts/compile_fair4ai_results.py` | Compiles a folder of evaluation JSONs into a scores CSV + aggregates (stdlib-only) |
+| `scripts/compile_fair4ai_results.py` | Compiles a folder of evaluation JSONs into a scores CSV + aggregates, including each evaluation's agent version (stdlib-only) |
+| `scripts/fair4ai_version.py` | Reads the agent version and builds the `session.agent_provenance` stamp used by the scripts above (stdlib-only) |
 | `scripts/make_fair4ai_figure.py` | Renders the 5×2 two-column (left = FAIR, right = AI-FAIR) score-distribution figure (needs numpy + matplotlib) |
 | `scripts/requirements-viz.txt` | Optional deps (numpy, matplotlib) for the figure only |
 | `example_inputs/` | Sample batch input lists (`.csv` and `.md`) for `/batch-evaluate-datasets` |
+| `VERSION` | The agent version (semantic versioning), stamped into every evaluation |
+| `CHANGELOG.md` | What changed in each agent version, and the versioning policy |
 | `CHECKLIST.csv` | 89-item FAIR4AI-Bio checklist (9 sections; each item carries a `Requirement Definition` and a per-item `Scoring: NA` condition, and is mapped to EML, DataCite, Schema.org, Croissant, its FAIR4AI dimension(s), and its Structural/Scientific/Provenance/Governance AI FAIR criteria). The meets/partial/does-not-meet judgment is guided by `RATING_RUBRIC.md` §4. |
 | `RATING_RUBRIC.md` | Authority for choosing each item's `meets / partial / does not meet / N/A` status |
 | `CHECKLIST_OVERVIEW.md` | Narrative description of all 9 checklist sections |

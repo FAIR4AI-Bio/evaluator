@@ -47,7 +47,9 @@ Look at the resolved run folder:
 - **If it already exists and contains `batch_evaluate_progress.md`**, read that file. Report which
   datasets are already ✅ complete (a valid evaluation JSON exists for them — verify per the
   Validation checklist) and which are ⏳ pending / ⚠️ / ⛔. You will **resume**: only pending and
-  failed datasets get (re)launched in Step 6. Do not re-evaluate completed ones.
+  failed datasets get (re)launched in Step 6. Do not re-evaluate completed ones. If the tracker's
+  **Agent version** differs from the current repo-root `VERSION` (`python scripts/fair4ai_version.py`),
+  warn the user that resuming will mix agent versions in one run and ask whether to continue.
 - **Otherwise**, create the run folder with two subfolders inside it: `evaluation_results/`
   (per-dataset JSONs) and `retrieved_metadata/` (per-dataset cached metadata).
 
@@ -242,6 +244,8 @@ A dataset's evaluation JSON is **valid** only if all hold:
 - [ ] every response `status` ∈ `{meets, partial, does not meet, N/A}`;
 - [ ] every response carries a `fair_category` and an `ai_fair_criteria` (both copied verbatim from the CSV);
 - [ ] `summary.fair4ai_scores.traditional_fair.overall` and `.ai_fair.overall` both exist and are non-null;
+- [ ] `session.agent_provenance.agent_version` equals the current `VERSION` (stamped by the scaffold, so a
+  missing or different value means the sub-agent skipped the scaffold);
 - [ ] re-running `compute_fair4ai_scores.py` on it prints **no `WARNING:`**.
 
 ## `batch_evaluate_progress.md` template (resumable tracker)
@@ -254,6 +258,7 @@ A dataset's evaluation JSON is **valid** only if all hold:
 **Run date:** <DATE>
 **Evaluation model:** <chosen model>  ·  **Coordinator:** <session model>
 **Checklist:** <checklist file> (89 items)  ·  **Wave size:** <n>
+**Agent version:** <output of `python scripts/fair4ai_version.py`>  ·  **Commit:** <git rev-parse --short HEAD>
 
 Status legend: ⏳ pending · ✅ complete · ⚠️ needs attention · ⛔ failed
 

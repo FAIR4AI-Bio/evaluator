@@ -8,7 +8,7 @@ Two kinds of things are pinned down here:
    metadata retrieved once (via the `retrieve-metadata` skill) for each example dataset, plus a
    `retrieval_manifest.json`. Committing these makes evaluations reproducible **without re-fetching
    from the network** — the evaluation reads from disk.
-2. **A deterministic validation suite** — two test modules, both stdlib-only:
+2. **A deterministic validation suite** — three test modules, all stdlib-only:
    - `test_example_outputs.py` checks that the committed example outputs in `example_outputs/` are
      structurally valid for the current **89-item** `CHECKLIST.csv` and that the scorer reproduces
      their stored scores.
@@ -20,6 +20,12 @@ Two kinds of things are pinned down here:
      checklist is supplied), and — the strongest check — scaffold + merge(ratings extracted from each committed example)
      reproduces that example's responses **exactly**, with the scorer yielding the stored scores and
      no warnings.
+   - `test_versioning.py` checks agent versioning: `VERSION` is a semantic version with a matching
+     `CHANGELOG.md` entry, the checklist fingerprint ignores line endings, and — run end to end
+     through the real command lines (scaffold → merge with `--session-json` → score → compile) — the
+     `session.agent_provenance` stamp is written, survives (and can't be forged by) the session
+     merge, gains `scored_with_*` from the scorer, and reaches the compiled CSV/aggregates. A
+     pre-versioning evaluation is scored with a warning and `null` provenance fields.
 
 The evaluation itself is produced by an LLM (a **Sonnet** sub-agent), so it is *not*
 deterministic — the suite therefore asserts **invariants**, not exact statuses/scores. Regenerating

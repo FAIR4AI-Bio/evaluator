@@ -39,6 +39,11 @@ Scoring rules (see RATING_RUBRIC.md and the fair4ai-scoring skill):
 Determinism: given the same input JSON, the output numbers are identical
 (re-running is idempotent). No third-party dependencies (stdlib only).
 
+Versioning: when it writes scores back, the script also records its own agent
+version and git commit in `session.agent_provenance.scored_with_version` /
+`scored_with_commit` (see fair4ai_version.py), and warns when the evaluation has no
+`agent_version` stamp (it predates versioning or skipped the scaffold).
+
 Usage:
     python scripts/compute_fair4ai_scores.py <eval.json>          # write scores back
     python scripts/compute_fair4ai_scores.py <eval.json> --dry-run # print only
@@ -46,7 +51,11 @@ Usage:
 """
 import argparse
 import json
+import os
 import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import fair4ai_version  # noqa: E402
 
 # Traditional-FAIR dimensions, in fixed display order.
 FAIR_DIMS = ["findable", "accessible", "interoperable", "reusable"]
@@ -471,7 +480,7 @@ def main(argv=None):
     for w in warnings:
         print(f"WARNING: {w}", file=sys.stderr)
 
-    print(f"FAIR4AI scores for {args.eval_json}:")
+    print(f"FAIR4AI scores for {args.eval_json} (agent v{fair4ai_version.get_version()}):")
     print(format_report(scores))
 
     if args.dry_run:
@@ -479,6 +488,10 @@ def main(argv=None):
         return 0
 
     doc.setdefault("summary", {})["fair4ai_scores"] = scores
+    if fair4ai_version.stamp_scored_with(doc):
+        print("WARNING: session.agent_provenance.agent_version is missing (the evaluation "
+              "predates agent versioning or was not built from the scaffold); recording only "
+              "the scorer's version", file=sys.stderr)
     with open(args.eval_json, "w", encoding="utf-8") as f:
         json.dump(doc, f, indent=2, ensure_ascii=False)
         f.write("\n")

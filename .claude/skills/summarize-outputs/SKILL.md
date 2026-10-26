@@ -60,8 +60,11 @@ if `python` is unavailable, use `py -3`.
 Capture the printed **`AGG:{...}`** line — it carries `n_total`, `dedup`, `missing`,
 `superseded` (older runs ignored under `latest`), `fair_means` (F/A/I/R),
 `overall_fair_mean`, `ai_fair_means` (ml_ready/ai_ready_for_task/traceable/
-care_compliance), `overall_ai_fair_mean`, and `by_confidence` groupings — you cite these
-in the report. Note any `Superseded (…)` / `WARNING:` lines on stderr.
+care_compliance), `overall_ai_fair_mean`, `by_confidence` groupings, and the version
+fields `by_agent_version` (agent version → datasets; `unversioned` for evaluations that
+predate versioning), `checklist_sha256s`, and `mixed_versions` — you cite these in the
+report. The CSV also carries per-row `agent_version`, `scored_with_version`, and
+`checklist_sha256` columns. Note any `Superseded (…)` / `WARNING:` lines on stderr.
 
 ## Step 3: Build the summary figure (optional / graceful)
 
@@ -81,8 +84,9 @@ and report are still produced). Pass `--title` / `--subtitle` if custom text was
 Write **`<output dir>/FAIR4AI_summary_report_<LABEL>.md`**, mirroring the structure and
 tone of the reference reports (`example_outputs/` and prior runs). Include:
 
-- **Header** — label/date, checklist (89 items), evaluation model (the model label),
-  summarizer model (this session), scoring method (one line), and a **coverage** line:
+- **Header** — label/date, checklist (89 items), **agent version(s)** (from AGG
+  `by_agent_version`), evaluation model (the model label), summarizer model (this
+  session), scoring method (one line), and a **coverage** line:
   n datasets summarized; note any `missing` datasets and, when `dedup=latest`, that
   older re-runs were **superseded** (list them from the AGG `superseded` field).
 - **Scores at a glance** — two tables (or one wide table), **sorted by Overall AI-FAIR
@@ -98,7 +102,10 @@ tone of the reference reports (`example_outputs/` and prior runs). Include:
 - **Per-dataset summaries** — a short paragraph + top gaps/recommendations per dataset.
 - **Caveats** — note that ratings were produced by the evaluation model, that this is a
   **metadata-only** evaluation, flag low-confidence datasets, and (when `dedup=all`) note
-  that multiple runs of the same dataset are included.
+  that multiple runs of the same dataset are included. When AGG `mixed_versions` is
+  true, say which datasets came from which agent version / checklist and that their
+  scores are not strictly comparable (a MAJOR version change means the checklist or
+  scoring rules changed).
 - **Artifacts** — a table linking the scores CSV, the figure (if produced), each
   evaluation JSON, and the source/confidence inputs if used.
 
@@ -106,6 +113,7 @@ tone of the reference reports (`example_outputs/` and prior runs). Include:
 
 - The **output directory** and a listing of what was written.
 - **n datasets summarized** (and n superseded/ignored, n missing).
+- The **agent version(s)** the evaluations came from, flagging mixed versions.
 - **Mean Overall FAIR** and **Mean Overall AI-FAIR** (and per-dimension/per-category
   means), noting they are script-computed (reproducible), and the typical FAIR-vs-AI-FAIR
   gap.

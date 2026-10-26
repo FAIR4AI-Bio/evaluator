@@ -76,6 +76,16 @@ in its **Batch / non-interactive mode**.
   `AGG:{...}` aggregates (stdlib-only). `--source-csv` is optional (datasets are otherwise derived
   from the JSONs); `--dedup latest` (default) keeps only the newest run of each dataset, `--dedup all`
   keeps every run.
+- `scripts/fair4ai_version.py` — the agent version (repo-root **`VERSION`**, currently 0.1.0; history
+  and the semver policy in `CHANGELOG.md`) and the **`session.agent_provenance`** stamp (stdlib-only).
+  `build_response_scaffold.py` stamps agent version, git commit/dirty flag, and the checklist's
+  SHA-256 (line endings normalized); `merge_ratings.py --session-json` carries the block over (the
+  agent's session file can't drop or forge it); `compute_fair4ai_scores.py` adds
+  `scored_with_version`/`scored_with_commit` when it writes scores, warning and recording `null`s for
+  evaluations that predate versioning. `compile_fair4ai_results.py` puts `agent_version`,
+  `scored_with_version` and a 12-char `checklist_sha256` in the CSV and `by_agent_version`/
+  `mixed_versions` in `AGG`. Bump `VERSION` + `CHANGELOG.md` when the checklist, rubric, skills or
+  scoring change (MAJOR = scores no longer comparable).
 - `scripts/make_fair4ai_figure.py` — 5×2 two-column (col 1 = Traditional FAIR, col 2 = AI-FAIR)
   score-distribution figure. **Needs `numpy` + `matplotlib`** (`scripts/requirements-viz.txt`); the
   figure step degrades gracefully if they're absent, so scoring/compilation never depend on the
@@ -103,7 +113,8 @@ Skip only rows where `Item` is blank. The per-item `Scoring: NA` cell governs th
     "evaluation_method": "...",
     "source_files": ["..."],
     "dataset": { "title": "...", "product_id": "...", "repository_url": "...", "landing_page_url": "...", "citation": "..." },
-    "evaluator": { "name": "...", "affiliation": "...", "email": "...", "relationship_to_dataset": "...", "evaluation_purpose": "...", "evaluation_description": "..." }
+    "evaluator": { "name": "...", "affiliation": "...", "email": "...", "relationship_to_dataset": "...", "evaluation_purpose": "...", "evaluation_description": "..." },
+    "agent_provenance": { "agent_version": "0.1.0", "git_commit": "...", "git_dirty": false, "checklist_file": "CHECKLIST.csv", "checklist_sha256": "...", "scored_with_version": "0.1.0", "scored_with_commit": "..." }
   },
   "responses": [
     { "item": "...", "requirement_definition": "...", "status": "meets|partial|does not meet|N/A", "evidence": "...", "notes": "...", "recommendation": "...", "fair_category": "Accessible | Reusable", "ai_fair_criteria": "Structural | Provenance" }

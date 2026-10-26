@@ -60,7 +60,7 @@ Richer metadata sources produce more accurate evaluations. If the landing page i
 The JSON report has three top-level blocks:
 
 ### `session`
-Who ran the evaluation, when, using which source files, and basic dataset identity (title, landing page URL, citation).
+Who ran the evaluation, when, using which source files, and basic dataset identity (title, landing page URL, citation). It also holds `agent_provenance`: the agent version (from the `VERSION` file), the git commit, a fingerprint of the checklist used, and the version that computed the scores. The scripts write this block automatically, so you can always tell which agent and checklist version produced a report (see `CHANGELOG.md`).
 
 ### `responses`
 One object per checklist item, in checklist-CSV order. Each response contains:
@@ -141,6 +141,7 @@ Output filename: [Enter]
 
 At the end of the session the agent prints:
 - The full path of the saved JSON file
+- The agent version that produced it
 - A status count summary (e.g., "42 meets · 18 partial · 11 does not meet · 9 N/A")
 - FAIR4AI scores at a glance
 - Top 3 priority recommendations
@@ -197,7 +198,10 @@ You can also summarize **any directory of evaluation JSONs** (a batch run folder
 It compiles a scores CSV, builds the summary figure (graceful skip if numpy/matplotlib are absent),
 and authors the narrative report. By default it **dedups reruns** — keeping only the newest run of
 each dataset and noting the older ones it ignored — or pass dedup mode `all` to include every run.
-The dataset list is derived from the JSONs, so a source CSV is optional.
+The dataset list is derived from the JSONs, so a source CSV is optional. The scores CSV records each
+evaluation's `agent_version`, `scored_with_version` and `checklist_sha256`, and the report warns when
+the folder mixes evaluations from different agent or checklist versions, whose scores are not
+strictly comparable.
 
 ---
 
@@ -205,6 +209,7 @@ The dataset list is derived from the JSONs, so a source CSV is optional.
 
 - **New checklist items**: add rows to the checklist CSV following the existing column structure. `build_response_scaffold.py` reads the CSV fresh each run, so new rows flow into the scaffold (and the rating guide) automatically.
 - **New output fields**: edit `scripts/build_response_scaffold.py` (`RESPONSE_FIELDS` and the field-fill logic), which owns the `responses[]` schema, and keep `scripts/merge_ratings.py`/`compute_fair4ai_scores.py` and `tests/test_scaffold_and_merge.py` in sync. The template JSON is now just a human-readable structural reference.
+- **Bumping the version**: when you change the checklist, rubric, skills or scoring, update the `VERSION` file and add an entry to `CHANGELOG.md` — MAJOR if checklist items or scoring rules change (scores no longer comparable), MINOR for features or rating-affecting rubric/skill changes, PATCH for fixes and docs — then tag the release commit `v<version>`. `tests/test_versioning.py` fails if `CHANGELOG.md` has no entry for the current version.
 - **Changing defaults**: update the checklist filename or template filename in `.claude/skills/evaluate-dataset/SKILL.md` under the "Gather parameters" step.
 
 ---
@@ -223,6 +228,8 @@ The dataset list is derived from the JSONs, so a source CSV is optional.
 | `scripts/compute_fair4ai_scores.py` | Scoring tool the fair4ai-scoring skill runs |
 | `scripts/compile_fair4ai_results.py` | Compiles a directory of evaluation JSONs into a scores CSV + aggregates (source CSV optional; dedups reruns) |
 | `scripts/make_fair4ai_figure.py` | Renders the summary figure (needs numpy + matplotlib) |
+| `scripts/fair4ai_version.py` | Prints the agent version (`python scripts/fair4ai_version.py`) and builds the `session.agent_provenance` stamp |
+| `VERSION` / `CHANGELOG.md` | The agent version and its change history |
 | `example_inputs/` | Sample `.csv` / `.md` batch input lists |
 | `RATING_RUBRIC.md` | Authority for the `meets / partial / does not meet / N/A` rating |
 | `CLAUDE.md` | Project context auto-loaded by Claude Code each session |

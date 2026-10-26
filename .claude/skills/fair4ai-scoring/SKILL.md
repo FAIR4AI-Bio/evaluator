@@ -115,6 +115,12 @@ sub-scores**, not by pooling items.
 ```
 
 The `details`/`components` blocks record per-dimension and per-facet counts so every
-score is auditable back to the items that produced it. When reporting to the user,
+score is auditable back to the items that produced it.
+
+When it writes scores back (not under `--dry-run`), the script also records the agent
+version and git commit that computed them in `session.agent_provenance.scored_with_version`
+/ `scored_with_commit`. If the evaluation has no `agent_version` stamp (it predates
+versioning, or was not built from the scaffold) it warns and records the unknown fields
+as `null` rather than guessing them. When reporting to the user,
 cite both the **Overall FAIR** and **Overall AI-FAIR** scores (plus the four AI-FAIR
 categories), and note that they are script-computed (reproducible), not estimated.

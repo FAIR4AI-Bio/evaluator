@@ -35,14 +35,18 @@ Stdlib only. Usage:
     python scripts/merge_ratings.py --scaffold /abs/scaffold.json --ratings /abs/section.json --checklist /abs/CHECKLIST.csv
     python scripts/merge_ratings.py --scaffold /abs/scaffold.json --ratings -   # read stdin
     # --summary-json also sets summary.strengths/gaps/overall_assessment;
-    # --session-json replaces the top-level `session` block:
+    # --session-json replaces the top-level `session` block (session.agent_provenance is kept):
     python scripts/merge_ratings.py --scaffold /abs/scaffold.json --ratings s.json --summary-json /abs/summary.json --session-json /abs/session.json
     python scripts/merge_ratings.py --selftest
 """
 import argparse
 import csv
 import json
+import os
 import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from fair4ai_version import PROVENANCE_KEY  # noqa: E402
 
 RATING_FIELDS = ["status", "evidence", "notes", "recommendation"]
 VALID_STATUSES = ["meets", "partial", "does not meet", "N/A"]
@@ -184,8 +188,15 @@ def apply_session(doc, session):
     """Replace the top-level `session` block (dataset identity, evaluator, method, etc.).
 
     Provided as a scripted alternative to hand-editing JSON: the session block depends on the
-    metadata fetched at eval time, so it is set after the scaffold is built.
+    metadata fetched at eval time, so it is set after the scaffold is built. The script-owned
+    `agent_provenance` block stamped by build_response_scaffold.py is carried over, so the
+    agent's session file can neither drop nor overwrite the version stamp.
     """
+    old = doc.get("session")
+    prov = old.get(PROVENANCE_KEY) if isinstance(old, dict) else None
+    session = dict(session)
+    if prov is not None:
+        session[PROVENANCE_KEY] = prov
     doc["session"] = session
 
 
@@ -286,6 +297,10 @@ def _selftest():
     d = copy.deepcopy(scaffold)
     apply_session(d, {"evaluation_date": "2026-01-01", "dataset": {"title": "T"}})
     assert d["session"]["dataset"]["title"] == "T" and d["session"]["evaluation_date"] == "2026-01-01"
+    # ...but the script-owned provenance stamp survives a session replacement
+    d["session"][PROVENANCE_KEY] = {"agent_version": "9.9.9"}
+    apply_session(d, {"evaluation_date": "2026-02-02", PROVENANCE_KEY: {"agent_version": "forged"}})
+    assert d["session"][PROVENANCE_KEY] == {"agent_version": "9.9.9"}, d["session"]
 
     print("merge_ratings selftest: PASS")
 
