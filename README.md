@@ -1,4 +1,5 @@
-# FAIR4AI Dataset Evaluation Agent (`evaluator`)
+# AI-FAIR Dataset Evaluation Agent (`evaluator`) [![DOI](https://zenodo.org/badge/1419294252.svg)](https://doi.org/10.5281/zenodo.23744163)
+
 
 Repository for the FAIR4AI evaluation agentic workflow, maintained by the [FAIR4AI-Bio](https://github.com/FAIR4AI-Bio) working group.
 
