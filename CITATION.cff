@@ -1,5 +1,5 @@
 abstract: >-
-  Repository for the FAIR4AI evaluation agentic workflow.
+  Agentic workflow for AI-FAIR data source evaluation, a part of the FAIR4AI-bio project, focused on metadata-first infrastructure for AI-enabled science.
 authors:
 - family-names: "Sokol"
   given-names: "Eric R."
@@ -15,12 +15,21 @@ identifiers:
     value: "https://github.com/fair4ai-bio/evaluator/releases/tag/v0.2.1"
   - description: "The GitHub source tree URL aligned to release tag v0.2.1."
     type: url
-    value: "https://github.com/fair4ai-bio/evaluator/tree/v0.2.1"
+    value: "https://github.com/fair4ai-bio/evaluator/tree/v0.2.1/<commit-hash>" # update on release
 keywords:
   - "imageomics"
+  - "FAIR"
+  - "AI-FAIR"
+  - "agentic-workflows"
+  - "evaluation"
+  - "metadata standards"
+  - "open-science"
+  - "ecology"
+  - "biodiversity"
 license: "MIT"
 message: "If you find this work helpful in your research, please cite it."
 repository-code: "https://github.com/fair4ai-bio/evaluator"
-title: "evaluator"
-version: "v0.2.1"
+title: "AI-FAIR Data Evaluator"
+version: "0.2.1"
 type: software
+# doi: ADD VERSION-AGNOSTIC AFTER RELEASE
