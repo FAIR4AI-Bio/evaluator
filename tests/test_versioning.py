@@ -1,8 +1,9 @@
 #!/usr/bin/env python
-"""Tests for agent versioning: the VERSION file and the `session.agent_provenance` stamp.
+"""Tests for agent versioning: the VERSION.txt file and the `session.agent_provenance` stamp.
 
 What is checked:
-  - VERSION holds a semantic version (MAJOR.MINOR.PATCH) with a matching CHANGELOG.md entry;
+  - VERSION.txt holds a semantic version (MAJOR.MINOR.PATCH) with a matching CHANGELOG.md entry,
+    and the version falls back to plugin.json when VERSION.txt is missing;
   - the checklist fingerprint ignores line endings (CRLF and LF checkouts agree);
   - END TO END through the real CLIs (scaffold -> merge with --session-json -> score ->
     compile): the scaffold stamps agent version, git commit and checklist SHA-256; the
@@ -22,6 +23,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 AGENT_DIR = Path(__file__).resolve().parent.parent
 CHECKLIST = AGENT_DIR / "CHECKLIST.csv"
@@ -44,6 +46,11 @@ class VersionFileTest(unittest.TestCase):
     def test_changelog_has_entry_for_current_version(self):
         changelog = (AGENT_DIR / "CHANGELOG.md").read_text(encoding="utf-8")
         self.assertRegex(changelog, r"(?m)^## \[" + re.escape(version.get_version()) + r"\]")
+
+    def test_version_falls_back_to_plugin_manifest(self):
+        manifest = json.loads((AGENT_DIR / "plugin.json").read_text(encoding="utf-8"))
+        with mock.patch.object(version, "VERSION_FILE", str(AGENT_DIR / "no-such-file.txt")):
+            self.assertEqual(version.get_version(), manifest["version"])
 
     def test_checklist_fingerprint_ignores_line_endings(self):
         with tempfile.TemporaryDirectory() as d:

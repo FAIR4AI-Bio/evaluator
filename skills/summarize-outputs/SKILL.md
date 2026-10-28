@@ -61,10 +61,10 @@ python "<PLUGIN_ROOT>/scripts/compile_fair4ai_results.py" \
   [--confidence-map "<confidence map>"]
 ```
 
-Invoke every Python call with the `python` command exactly as written — never
-`python3` (on Windows it may resolve to the Microsoft Store redirector and open the
-install manager). The scripts are stdlib-only, so no `pip`/install step is ever needed;
-if `python` is unavailable, use `py -3`.
+Invoke every Python call with the `python` command exactly as written. If `python` is not
+found, use `py -3` on Windows (never `python3` there — it may resolve to the Microsoft Store
+redirector and open the install manager) and `python3` on Linux/macOS. The scripts are
+stdlib-only, so no `pip`/install step is ever needed.
 
 Capture the printed **`AGG:{...}`** line — it carries `n_total`, `dedup`, `missing`,
 `superseded` (older runs ignored under `latest`), `fair_means` (F/A/I/R),

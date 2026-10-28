@@ -67,7 +67,7 @@ Richer metadata sources produce more accurate evaluations. If the landing page i
 The JSON report has three top-level blocks:
 
 ### `session`
-Who ran the evaluation, when, using which source files, and basic dataset identity (title, landing page URL, citation). It also holds `agent_provenance`: the agent version (from the `VERSION` file), the git commit, a fingerprint of the checklist used, and the version that computed the scores. The scripts write this block automatically, so you can always tell which agent and checklist version produced a report (see `CHANGELOG.md`).
+Who ran the evaluation, when, using which source files, and basic dataset identity (title, landing page URL, citation). It also holds `agent_provenance`: the agent version (from the `VERSION.txt` file), the git commit, a fingerprint of the checklist used, and the version that computed the scores. The scripts write this block automatically, so you can always tell which agent and checklist version produced a report (see `CHANGELOG.md`).
 
 ### `responses`
 One object per checklist item, in checklist-CSV order. Each response contains:
@@ -216,7 +216,7 @@ strictly comparable.
 
 - **New checklist items**: add rows to the checklist CSV following the existing column structure. `build_response_scaffold.py` reads the CSV fresh each run, so new rows flow into the scaffold (and the rating guide) automatically.
 - **New output fields**: edit `scripts/build_response_scaffold.py` (`RESPONSE_FIELDS` and the field-fill logic), which owns the `responses[]` schema, and keep `scripts/merge_ratings.py`/`compute_fair4ai_scores.py` and `tests/test_scaffold_and_merge.py` in sync. The template JSON is now just a human-readable structural reference.
-- **Bumping the version**: when you change the checklist, rubric, skills or scoring, update the `VERSION` file and add an entry to `CHANGELOG.md` — MAJOR if checklist items or scoring rules change (scores no longer comparable), MINOR for features or rating-affecting rubric/skill changes, PATCH for fixes and docs — and the `version` in `plugin.json`, `.claude-plugin/plugin.json`, and `.claude-plugin/marketplace.json`, then tag the release commit `v<version>`. `tests/test_versioning.py` fails if `CHANGELOG.md` has no entry for the current version, and `tests/test_plugin_layout.py` fails if a manifest version disagrees with `VERSION`.
+- **Bumping the version**: when you change the checklist, rubric, skills or scoring, update the `VERSION.txt` file and add an entry to `CHANGELOG.md` — MAJOR if checklist items or scoring rules change (scores no longer comparable), MINOR for features or rating-affecting rubric/skill changes, PATCH for fixes and docs — and the `version` in `plugin.json`, `.claude-plugin/plugin.json`, and `.claude-plugin/marketplace.json`, plus `version` (`v<version>`), the release tag URLs and the release date in `CITATION.cff` and `.zenodo.json`, then tag the release commit `v<version>`. `tests/test_versioning.py` fails if `CHANGELOG.md` has no entry for the current version, and `tests/test_plugin_layout.py` fails if a manifest, `CITATION.cff` or `.zenodo.json` version disagrees with `VERSION.txt`.
 - **Changing defaults**: update the checklist filename or template filename in `skills/evaluate-dataset/SKILL.md` under the "Gather parameters" step.
 
 ---
@@ -238,7 +238,7 @@ strictly comparable.
 | `scripts/compile_fair4ai_results.py` | Compiles a directory of evaluation JSONs into a scores CSV + aggregates (source CSV optional; dedups reruns) |
 | `scripts/make_fair4ai_figure.py` | Renders the summary figure (needs numpy + matplotlib) |
 | `scripts/fair4ai_version.py` | Prints the agent version (`python scripts/fair4ai_version.py`) and builds the `session.agent_provenance` stamp |
-| `VERSION` / `CHANGELOG.md` | The agent version and its change history |
+| `VERSION.txt` / `CHANGELOG.md` | The agent version and its change history |
 | `example_inputs/` | Sample `.csv` / `.md` batch input lists |
 | `RATING_RUBRIC.md` | Authority for the `meets / partial / does not meet / N/A` rating |
 | `AGENTS.md` / `CLAUDE.md` | Contributor guide for developing the plugin (not loaded for plugin users) |

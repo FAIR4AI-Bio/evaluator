@@ -9,7 +9,7 @@
       "name": "fair4ai-evaluator",
       "source": "./",
       "description": "Evaluate datasets for AI-readiness with the FAIR4AI-Bio checklist (Traditional FAIR + AI-FAIR scores).",
-      "version": "0.2.0"
+      "version": "0.2.1"
     }
   ]
 }

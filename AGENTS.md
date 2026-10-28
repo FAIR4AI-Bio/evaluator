@@ -99,7 +99,7 @@ in its **Batch / non-interactive mode**.
   `AGG:{...}` aggregates (stdlib-only). `--source-csv` is optional (datasets are otherwise derived
   from the JSONs); `--dedup latest` (default) keeps only the newest run of each dataset, `--dedup all`
   keeps every run.
-- `scripts/fair4ai_version.py` — the agent version (plugin-root **`VERSION`**; history and the
+- `scripts/fair4ai_version.py` — the agent version (plugin-root **`VERSION.txt`**; history and the
   semver policy in `CHANGELOG.md`) and the **`session.agent_provenance`** stamp (stdlib-only).
   `build_response_scaffold.py` stamps agent version, git commit/dirty flag, and the checklist's
   SHA-256 (line endings normalized); `merge_ratings.py --session-json` carries the block over (the
@@ -107,8 +107,8 @@ in its **Batch / non-interactive mode**.
   `scored_with_version`/`scored_with_commit` when it writes scores, warning and recording `null`s for
   evaluations that predate versioning. `compile_fair4ai_results.py` puts `agent_version`,
   `scored_with_version` and a 12-char `checklist_sha256` in the CSV and `by_agent_version`/
-  `mixed_versions` in `AGG`. Bump `VERSION` + `CHANGELOG.md`, and the `version` in all three plugin
-  manifests, when the checklist, rubric, skills or scoring change (MAJOR = scores no longer
+  `mixed_versions` in `AGG`. Bump `VERSION.txt` + `CHANGELOG.md`, the `version` in all three plugin
+  manifests, and the version/tag/date in `CITATION.cff` and `.zenodo.json` when the checklist, rubric, skills or scoring change (MAJOR = scores no longer
   comparable). In an installed plugin that is not a git checkout, `git_commit` is `null` and the
   version is the provenance key.
 - `scripts/make_fair4ai_figure.py` — 5×2 two-column (col 1 = Traditional FAIR, col 2 = AI-FAIR)
@@ -120,7 +120,8 @@ in its **Batch / non-interactive mode**.
 resolve to the Microsoft Store App-Installer redirector and pop the "Python install manager". The
 scripts are stdlib-only (only the figure needs numpy+matplotlib, installed once by the user), so a
 sub-agent must never run `pip`, `py -m pip`, `python -m venv`, or any installer. If `python` is
-unavailable, use `py -3`, never `python3`.
+unavailable, use `py -3` on Windows (never `python3` there) and `python3` on Linux/macOS (minimal
+containers often have only `/usr/bin/python3`).
 
 ## Checklist structure
 
@@ -139,7 +140,7 @@ Skip only rows where `Item` is blank. The per-item `Scoring: NA` cell governs th
     "source_files": ["..."],
     "dataset": { "title": "...", "product_id": "...", "repository_url": "...", "landing_page_url": "...", "citation": "..." },
     "evaluator": { "name": "...", "affiliation": "...", "email": "...", "relationship_to_dataset": "...", "evaluation_purpose": "...", "evaluation_description": "..." },
-    "agent_provenance": { "agent_version": "0.2.0", "git_commit": "...", "git_dirty": false, "checklist_file": "CHECKLIST.csv", "checklist_sha256": "...", "scored_with_version": "0.2.0", "scored_with_commit": "..." }
+    "agent_provenance": { "agent_version": "0.2.1", "git_commit": "...", "git_dirty": false, "checklist_file": "CHECKLIST.csv", "checklist_sha256": "...", "scored_with_version": "0.2.1", "scored_with_commit": "..." }
   },
   "responses": [
     { "item": "...", "requirement_definition": "...", "status": "meets|partial|does not meet|N/A", "evidence": "...", "notes": "...", "recommendation": "...", "fair_category": "Accessible | Reusable", "ai_fair_criteria": "Structural | Provenance" }
