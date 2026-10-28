@@ -8,7 +8,7 @@
     {
       "name": "Campolongo, Elizabeth",
       "orcid": "0000-0003-0846-2413",
-      "affiliation": "Imageomics Institute & ABC Global Center, The Ohio State University, Columbus, OH"
+      "affiliation": "The Ohio State University, Columbus, OH"
     }
   ],
   "upload_type": "software",
@@ -25,31 +25,7 @@
     "biodiversity"
   ],
   "title": "AI-FAIR Data Evaluator",
-  "version": "v0.2.1",
+  "version": "0.2.1",
   "license": "MIT",
-  "publication_date": "2026-10-28",
-  "grants": [
-    {
-      "id": "021nxhr62::2118240"
-    },
-    {
-      "id": "021nxhr62::2330423"
-    },
-    {
-      "id": "021nxhr62::2531924"
-    },
-    {
-      "id": "021nxhr62::2531922"
-    },
-    {
-      "id": "021nxhr62::2531925"
-    },
-    {
-      "id": "021nxhr62::2600200"
-    },
-    {
-      "id": "021nxhr62::2217817"
-    }
-  ],
-  "references": []
+  "publication_date": "2026-10-28"
 }

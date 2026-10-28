@@ -30,6 +30,6 @@ license: "MIT"
 message: "If you find this work helpful in your research, please cite it."
 repository-code: "https://github.com/fair4ai-bio/evaluator"
 title: "AI-FAIR Data Evaluator"
-version: "v0.2.1"
+version: "0.2.1"
 type: software
 # doi: ADD VERSION-AGNOSTIC AFTER RELEASE
