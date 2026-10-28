@@ -1,0 +1,47 @@
+{
+  "creators": [
+    {
+      "name": "Sokol, Eric R.",
+      "orcid": "0000-0001-5923-0917",
+      "affiliation": "NEON HQ, Battelle, Boulder CO | INSTAAR, CU Boulder"
+    },
+    {
+      "name": "Campolongo, Elizabeth",
+      "orcid": "0000-0003-0846-2413",
+      "affiliation": ""
+    }
+  ],
+  "upload_type": "software",
+  "description": "Repository for the FAIR4AI evaluation agentic workflow.",
+  "keywords": [
+    "imageomics"
+  ],
+  "title": "evaluator",
+  "version": "v0.2.0",
+  "license": "MIT",
+  "publication_date": "2026-10-26",
+  "grants": [
+    {
+      "id": "021nxhr62::2118240"
+    },
+    {
+      "id": "021nxhr62::2330423"
+    },
+    {
+      "id": "021nxhr62::2531924"
+    },
+    {
+      "id": "021nxhr62::2531922"
+    },
+    {
+      "id": "021nxhr62::2531925"
+    },
+    {
+      "id": "021nxhr62::2600200"
+    },
+    {
+      "id": "021nxhr62::2217817"
+    }
+  ],
+  "references": []
+}
