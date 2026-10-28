@@ -20,16 +20,19 @@ Two kinds of things are pinned down here:
      checklist is supplied), and — the strongest check — scaffold + merge(ratings extracted from each committed example)
      reproduces that example's responses **exactly**, with the scorer yielding the stored scores and
      no warnings.
-   - `test_versioning.py` checks agent versioning: `VERSION` is a semantic version with a matching
-     `CHANGELOG.md` entry, the checklist fingerprint ignores line endings, and — run end to end
+   - `test_versioning.py` checks agent versioning: `VERSION.txt` is a semantic version with a matching
+     `CHANGELOG.md` entry (falling back to `plugin.json` if the file is missing), the checklist fingerprint ignores line endings, and — run end to end
      through the real command lines (scaffold → merge with `--session-json` → score → compile) — the
      `session.agent_provenance` stamp is written, survives (and can't be forged by) the session
      merge, gains `scored_with_*` from the scorer, and reaches the compiled CSV/aggregates. A
      pre-versioning evaluation is scored with a warning and `null` provenance fields.
    - `test_plugin_layout.py` checks the plugin packaging: the Agent Plugins `plugin.json` uses only
-     allowed keys and a valid name, all three manifests agree with `VERSION`, every
-     `skills/*/SKILL.md` has Agent Skills frontmatter matching its folder, and no skill reaches
-     bundled files through paths relative to the working directory.
+     allowed keys and a valid name, all three manifests agree with `VERSION.txt` (and
+     `CITATION.cff`/`.zenodo.json` carry the matching `v<version>` tag), every
+     `skills/*/SKILL.md` has Agent Skills frontmatter matching its folder (bare `---` delimiters,
+     LF endings, no BOM), no skill reaches bundled files through paths relative to the working
+     directory, every skill that runs a script states the `py -3`/`python3` fallbacks, and no
+     tracked file other than `LICENSE` is extensionless.
 
 The evaluation itself is produced by an LLM (a **Sonnet** sub-agent), so it is *not*
 deterministic — the suite therefore asserts **invariants**, not exact statuses/scores. Regenerating
@@ -62,7 +65,8 @@ cd evaluator          # the repository root
 python -m unittest discover -s tests          # or: python tests/test_example_outputs.py
 ```
 
-(Use `python`; on Windows fall back to `py -3`, never `python3`.)
+(Use `python`; if it is missing, fall back to `py -3` on Windows (never `python3` there) or
+`python3` on Linux/macOS.)
 
 ## How to (re)generate the fixtures and outputs
 

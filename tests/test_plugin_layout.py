@@ -5,17 +5,24 @@ What is checked:
   - the root `plugin.json` follows the Agent Plugins 1.0 manifest rules (exact `$schema`,
     closed set of top-level keys, valid plugin name);
   - `plugin.json`, `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json` agree on
-    the plugin name and carry the version in `VERSION`;
+    the plugin name and carry the version in `VERSION.txt`, and `CITATION.cff`/`.zenodo.json`
+    carry the matching `v<version>` tag;
   - every `skills/<name>/SKILL.md` has Agent Skills frontmatter (`name` == folder, a non-empty
-    `description`, and only spec fields), and the old `.claude/skills/` location is gone;
+    `description`, and only spec fields) between bare `---` lines, with LF endings and no BOM,
+    and the old `.claude/skills/` location is gone;
   - no skill reaches bundled files through the working directory (`python scripts/...`,
-    `.claude/skills/...`), since installed plugins run from the user's project folder.
+    `.claude/skills/...`), since installed plugins run from the user's project folder;
+  - every skill that runs a bundled script states the interpreter fallbacks (`py -3` on
+    Windows, `python3` on Linux/macOS);
+  - no tracked file is extensionless apart from `LICENSE` (Gemini's skill uploader rejects
+    them, which is why the version lives in `VERSION.txt`).
 
 Run (stdlib only, no pip):
     python -m unittest discover -s tests
 """
 import json
 import re
+import subprocess
 import sys
 import unittest
 from pathlib import Path
@@ -40,8 +47,12 @@ def load_json(rel):
 
 
 def frontmatter(skill_md):
-    """Return the top-level `key: value` pairs of a SKILL.md YAML frontmatter block."""
-    text = skill_md.read_text(encoding="utf-8")
+    """Return the top-level `key: value` pairs of a SKILL.md YAML frontmatter block.
+
+    Reads raw bytes, so a BOM or CRLF line endings (which strict harness parsers reject) fail
+    the match instead of being normalized away.
+    """
+    text = skill_md.read_bytes().decode("utf-8")
     m = re.match(r"---\n(.*?)\n---\n", text, re.S)
     if not m:
         return None
@@ -73,6 +84,14 @@ class ManifestTest(unittest.TestCase):
                 self.assertEqual(doc["name"], PLUGIN_NAME)
                 self.assertEqual(doc["version"], current)
 
+    def test_release_metadata_agrees_with_version_file(self):
+        tag = "v" + version.get_version()
+        self.assertEqual(load_json(".zenodo.json")["version"], tag)
+        cff = (AGENT_DIR / "CITATION.cff").read_text(encoding="utf-8")
+        self.assertRegex(cff, r'(?m)^version: "' + re.escape(tag) + '"$')
+        self.assertEqual(set(re.findall(r"/(v\d+\.\d+\.\d+)", cff)), {tag},
+                         "CITATION.cff release URLs must point at the current tag")
+
 
 class SkillLayoutTest(unittest.TestCase):
     def test_skills_live_under_skills_dir(self):
@@ -100,6 +119,26 @@ class SkillLayoutTest(unittest.TestCase):
                 self.assertEqual(bad.findall(text), [])
                 self.assertIn("${CLAUDE_PLUGIN_ROOT}", text,
                               "each skill must define <PLUGIN_ROOT> in its Plugin files section")
+
+    def test_interpreter_rule_has_platform_fallbacks(self):
+        for skill_md in SKILLS_DIR.glob("*/SKILL.md"):
+            text = " ".join(skill_md.read_text(encoding="utf-8").split())
+            if 'python "<PLUGIN_ROOT>/' not in text:
+                continue
+            with self.subTest(skill=skill_md.parent.name):
+                self.assertRegex(text, r"`py -3`,? on Windows|on Windows,? use `py -3`")
+                self.assertRegex(text, r"`python3` on Linux/macOS|Linux/macOS use `python3`")
+
+
+class PackagingTest(unittest.TestCase):
+    def test_no_extensionless_files(self):
+        out = subprocess.run(["git", "-C", str(AGENT_DIR), "ls-files"],
+                             capture_output=True, text=True)
+        if out.returncode != 0:
+            self.skipTest("not a git checkout")
+        bad = [f for f in out.stdout.splitlines()
+               if "." not in Path(f).name and Path(f).name != "LICENSE"]
+        self.assertEqual(bad, [])
 
 
 if __name__ == "__main__":

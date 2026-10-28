@@ -18,10 +18,10 @@ Sibling skills named below (`retrieve-metadata`, `fair4ai-scoring`, `batch-evalu
 ship in the same plugin; in Claude Code they are invoked as `fair4ai-evaluator:<skill>`.
 
 **Interpreter rule:** run all Python via the `python` command exactly as written. Do **not** call
-`python3`, `pip`, `py -m pip`, or `python -m venv`, and never trigger any Python installer — the
-scripts are stdlib-only and need no install. If `python` is unavailable, use `py -3`, never
-`python3` (on Windows `python3` may resolve to the Microsoft Store redirector and open the
-install manager).
+`pip`, `py -m pip`, or `python -m venv`, and never trigger any Python installer — the
+scripts are stdlib-only and need no install. If `python` is not found: on Windows use `py -3`,
+never `python3` (on Windows `python3` may resolve to the Microsoft Store redirector and open the
+install manager); on Linux/macOS use `python3` (e.g. when `command -v python` prints nothing).
 
 ## Step 1: Gather parameters
 
@@ -77,7 +77,8 @@ directly by a person, you will be given all parameters up front in your prompt. 
   `.py` scripts, create renamed/duplicate evaluation JSONs or scratch notes, or **ever** write into
   the plugin directory (`<PLUGIN_ROOT>` — where `CHECKLIST.csv`, the skills, and `scripts/` live)
   outside the run folder.
-- **Interpreter rule:** as stated at the top — `python` only, never `python3`/`pip`/installers.
+- **Interpreter rule:** as stated at the top — `python` (fallback `py -3` on Windows, `python3` on
+  Linux/macOS), never `pip`/installers.
 - **End your turn by returning the structured result** below as your final message (in addition to
   producing the JSON file via Steps 3–7) — the coordinator parses this instead of re-opening your file:
 
@@ -157,7 +158,7 @@ them, which keeps them exactly correct). Because every item already defaults to 
 Steps 4–5 is only to **override the exceptions** — the items that are `partial`, `does not meet`, or
 `N/A` — by producing their `status`, `evidence`, `notes`, and `recommendation`.
 
-The scaffold also stamps **`session.agent_provenance`** — the agent version (plugin-root `VERSION`),
+The scaffold also stamps **`session.agent_provenance`** — the agent version (plugin-root `VERSION.txt`),
 the plugin's git commit (`null` when the installed copy is not a git checkout), and the SHA-256 of the checklist you passed. This block is
 **script-owned**: never write or edit it yourself (Step 6's session merge carries it over, and
 Step 7's scorer adds the version that computed the scores).
@@ -353,7 +354,7 @@ structure (do not omit any top-level key):
       "evaluation_description": "<brief description of what sources were used and any retrieval limitations>"
     },
     "agent_provenance": {
-      "agent_version": "<from VERSION, e.g. 0.1.0 — stamped by build_response_scaffold.py>",
+      "agent_version": "<from VERSION.txt, e.g. 0.1.0 — stamped by build_response_scaffold.py>",
       "git_commit": "<plugin git commit, or null>",
       "git_dirty": false,
       "checklist_file": "CHECKLIST.csv",

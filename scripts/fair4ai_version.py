@@ -6,7 +6,7 @@ Every evaluation JSON records which version of the agent produced it, in
 never silently compared:
 
     "agent_provenance": {
-      "agent_version": "0.1.0",          # the repo-root VERSION file
+      "agent_version": "0.1.0",          # the plugin-root VERSION.txt file
       "git_commit": "2660ffd...",        # full commit of the agent repo (null if not a git checkout)
       "git_dirty": false,                # true if tracked files had uncommitted changes
       "checklist_file": "CHECKLIST.csv", # basename of the checklist actually used
@@ -37,7 +37,8 @@ import os
 import subprocess
 
 AGENT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-VERSION_FILE = os.path.join(AGENT_DIR, "VERSION")
+VERSION_FILE = os.path.join(AGENT_DIR, "VERSION.txt")
+MANIFEST_FILE = os.path.join(AGENT_DIR, "plugin.json")
 PROVENANCE_KEY = "agent_provenance"
 SCAFFOLD_FIELDS = ["agent_version", "git_commit", "git_dirty",
                    "checklist_file", "checklist_sha256"]
@@ -45,11 +46,22 @@ SCORER_FIELDS = ["scored_with_version", "scored_with_commit"]
 
 
 def get_version():
-    """The agent version from the repo-root VERSION file, or 'unknown'."""
+    """The agent version from the plugin-root VERSION.txt file, or 'unknown'.
+
+    Falls back to the `version` in the root plugin.json when VERSION.txt is missing or
+    empty (e.g. a harness that packaged the plugin without it).
+    """
     try:
         with open(VERSION_FILE, encoding="utf-8") as f:
-            return f.read().strip() or "unknown"
+            text = f.read().strip()
+        if text:
+            return text
     except OSError:
+        pass
+    try:
+        with open(MANIFEST_FILE, encoding="utf-8") as f:
+            return str(json.load(f).get("version") or "").strip() or "unknown"
+    except (OSError, ValueError, AttributeError):
         return "unknown"
 
 

@@ -108,7 +108,7 @@ All five capabilities live under `skills/` (one skill per directory, each with a
 ## Versioning
 
 The agent is versioned with [semantic versioning](https://semver.org/). The current version is in the
-plugin-root **`VERSION`** file (print it with `python scripts/fair4ai_version.py`), mirrored in the
+plugin-root **`VERSION.txt`** file (print it with `python scripts/fair4ai_version.py`), mirrored in the
 `version` field of the plugin manifests;
 each release is tagged `v<version>` in git, and **`CHANGELOG.md`** lists what changed. A **MAJOR**
 bump means the checklist items or scoring rules changed, so scores are no longer comparable with
@@ -175,7 +175,7 @@ See `example_outputs/` for complete examples.
 | `scripts/make_fair4ai_figure.py` | Renders the 5×2 two-column (left = FAIR, right = AI-FAIR) score-distribution figure (needs numpy + matplotlib) |
 | `scripts/requirements-viz.txt` | Optional deps (numpy, matplotlib) for the figure only |
 | `example_inputs/` | Sample batch input lists (`.csv` and `.md`) for `batch-evaluate-datasets`, and example metadata folders |
-| `VERSION` | The agent version (semantic versioning), stamped into every evaluation |
+| `VERSION.txt` | The agent version (semantic versioning), stamped into every evaluation |
 | `CHANGELOG.md` | What changed in each agent version, and the versioning policy |
 | `CHECKLIST.csv` | 89-item FAIR4AI-Bio checklist (9 sections; each item carries a `Requirement Definition` and a per-item `Scoring: NA` condition, and is mapped to EML, DataCite, Schema.org, Croissant, its FAIR4AI dimension(s), and its Structural/Scientific/Provenance/Governance AI FAIR criteria). The meets/partial/does-not-meet judgment is guided by `RATING_RUBRIC.md` §4. |
 | `RATING_RUBRIC.md` | Authority for choosing each item's `meets / partial / does not meet / N/A` status |

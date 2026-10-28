@@ -110,9 +110,10 @@ list and **confirm before launching** any sub-agents.
   ```bash
   python "<PLUGIN_ROOT>/scripts/compute_fair4ai_scores.py" --selftest
   ```
-  Invoke every Python call in this skill with the `python` command exactly as written —
-  never `python3` (on Windows it may resolve to the Microsoft Store redirector and open the
-  install manager). The scripts are stdlib-only, so no `pip`/install step is ever needed.
+  Invoke every Python call in this skill with the `python` command exactly as written. If
+  `python` is not found, use `py -3` on Windows (never `python3` there — it may resolve to the
+  Microsoft Store redirector and open the install manager) and `python3` on Linux/macOS. The
+  scripts are stdlib-only, so no `pip`/install step is ever needed.
 - Seed (or refresh, on resume) **`<run folder>/batch_evaluate_progress.md`** — see the template at
   the end of this file. It records the resolved params, chosen model, run folder, and one row per
   dataset with status ⏳ pending (or the already-known status on resume).
@@ -148,10 +149,11 @@ Each sub-agent uses the **chosen model** and gets a prompt that:
    (b) running `python "<PLUGIN_ROOT>/scripts/compute_fair4ai_scores.py" <that file>` to populate scores, and (c)
    returning the **Structured result contract** (below) as its final message.
 4. States the **Interpreter rule**: *"Run all Python via the `python` command exactly as
-   written. Do **not** call `python3`, `pip`, `py -m pip`, or `python -m venv`, and never trigger
-   any Python installer — the scripts are stdlib-only and need no install. If `python` is
-   unavailable, use `py -3`, never `python3`."* (On Windows `python3` may resolve to the
-   Microsoft Store App-Installer redirector and pop the "Python install manager".)
+   written. Do **not** call `pip`, `py -m pip`, or `python -m venv`, and never trigger
+   any Python installer — the scripts are stdlib-only and need no install. If `python` is not
+   found, use `py -3` on Windows (never `python3` there) and `python3` on Linux/macOS."* (On
+   Windows `python3` may resolve to the Microsoft Store App-Installer redirector and pop the
+   "Python install manager"; minimal Linux containers often ship only `python3`.)
 5. States the **File-hygiene rule**: *"Use the absolute paths given above. Do not rely on the
    current working directory, do not read `CHECKLIST.csv` by a bare relative name, and do not `cd`
    into the plugin directory. You **may invoke** the committed helper scripts in
@@ -262,7 +264,7 @@ A dataset's evaluation JSON is **valid** only if all hold:
 - [ ] every response `status` ∈ `{meets, partial, does not meet, N/A}`;
 - [ ] every response carries a `fair_category` and an `ai_fair_criteria` (both copied verbatim from the CSV);
 - [ ] `summary.fair4ai_scores.traditional_fair.overall` and `.ai_fair.overall` both exist and are non-null;
-- [ ] `session.agent_provenance.agent_version` equals the current plugin `VERSION` (stamped by the scaffold, so a
+- [ ] `session.agent_provenance.agent_version` equals the current plugin `VERSION.txt` (stamped by the scaffold, so a
   missing or different value means the sub-agent skipped the scaffold);
 - [ ] re-running `compute_fair4ai_scores.py` on it prints **no `WARNING:`**.
 

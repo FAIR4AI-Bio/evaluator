@@ -1,0 +1,4 @@
+# Keep LF in every checkout: strict skill/frontmatter parsers (e.g. Gemini) reject CRLF.
+* text=auto eol=lf
+*.png binary
+*.pdf binary

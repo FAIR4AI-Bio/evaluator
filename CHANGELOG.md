@@ -1,7 +1,7 @@
 # Changelog
 
 All notable changes to the FAIR4AI-Bio evaluator agent. The version lives in the plugin-root
-`VERSION` file (mirrored in the plugin manifests) and is stamped into every evaluation JSON (`session.agent_provenance`).
+`VERSION.txt` file (mirrored in the plugin manifests) and is stamped into every evaluation JSON (`session.agent_provenance`).
 
 Versions follow [semantic versioning](https://semver.org/), applied to evaluation results:
 
@@ -11,6 +11,22 @@ Versions follow [semantic versioning](https://semver.org/), applied to evaluatio
 - **PATCH** — bug fixes and documentation that do not change ratings or scores.
 
 Each release is tagged `v<version>` in git.
+
+## [0.2.1] — 2026-10-28
+
+Cross-harness portability fixes from running the plugin in Gemini. Ratings and scores are unchanged.
+
+- The version file is now **`VERSION.txt`** (was `VERSION`): Gemini's skill uploader rejects
+  extensionless files. `scripts/fair4ai_version.py` falls back to the `version` in `plugin.json`
+  if `VERSION.txt` is missing. `tests/test_plugin_layout.py` fails on any tracked extensionless
+  file other than `LICENSE`.
+- `.gitattributes` keeps LF line endings in every checkout, and the frontmatter test now reads
+  `SKILL.md` as raw bytes, so a BOM or CRLF delimiters fail the test.
+- The interpreter rule allows `python3` on Linux/macOS when `python` is not found (minimal
+  containers often ship only `/usr/bin/python3`); Windows still falls back to `py -3`, never
+  `python3`. A layout test checks every skill that runs a script states both fallbacks.
+- `CITATION.cff` and `.zenodo.json` are part of the version bump, and a layout test checks
+  that their version and release-tag URLs match `VERSION.txt`.
 
 ## [0.2.0] — 2026-10-25
 
