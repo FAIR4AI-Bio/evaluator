@@ -13,9 +13,9 @@ identifiers:
   - description: "The GitHub release URL of tag v0.2.1."
     type: url
     value: "https://github.com/fair4ai-bio/evaluator/releases/tag/v0.2.1"
-  - description: "The GitHub source tree URL aligned to release tag v0.2.1."
+  - description: "The GitHub URL of the commit tagged with v0.2.1."
     type: url
-    value: "https://github.com/fair4ai-bio/evaluator/tree/v0.2.1/<commit-hash>" # update on release
+    value: "https://github.com/fair4ai-bio/evaluator/tree/f6076e076e2600b59af2f99d0daff9bbe330869b" # update on release
 keywords:
   - "imageomics"
   - "FAIR"
@@ -32,4 +32,4 @@ repository-code: "https://github.com/fair4ai-bio/evaluator"
 title: "AI-FAIR Data Evaluator"
 version: "0.2.1"
 type: software
-# doi: ADD VERSION-AGNOSTIC AFTER RELEASE
+doi: "10.5281/zenodo.23744163"
