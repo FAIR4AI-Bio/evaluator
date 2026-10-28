@@ -12,11 +12,19 @@
     }
   ],
   "upload_type": "software",
-  "description": "Repository for the FAIR4AI evaluation agentic workflow.",
+  "description": "Agentic workflow for AI-FAIR data source evaluation, a part of the FAIR4AI-bio project, focused on metadata-first infrastructure for AI-enabled science.",
   "keywords": [
-    "imageomics"
+    "imageomics",
+    "FAIR",
+    "AI-FAIR",
+    "agentic-workflows",
+    "evaluation",
+    "metadata standards",
+    "open-science",
+    "ecology",
+    "biodiversity"
   ],
-  "title": "evaluator",
+  "title": "AI-FAIR Data Evaluator",
   "version": "v0.2.1",
   "license": "MIT",
   "publication_date": "2026-10-28",
