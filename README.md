@@ -1,13 +1,14 @@
-# AI-FAIR Dataset Evaluation Agent (`evaluator`) [![DOI](https://zenodo.org/badge/1419294252.svg)](https://doi.org/10.5281/zenodo.23744163)
+# AI-FAIR Dataset Evaluation Agent (`evaluator`) [![DOI](https://zenodo.org/badge/1419294252.svg)](https://doi.org/10.5281/zenodo.23744163) [![arXiv](https://img.shields.io/badge/arXiv-2611.03327-b31b1b.svg)](https://arxiv.org/abs/2611.03327)
 
+Repository for the AI-FAIR evaluation agentic workflow, maintained by the [FAIR4AI-Bio](https://github.com/FAIR4AI-Bio) checklist working group.
 
-Repository for the FAIR4AI evaluation agentic workflow, maintained by the [FAIR4AI-Bio](https://github.com/FAIR4AI-Bio) working group.
-
-An AI agent that evaluates biodiversity, ecology, and environmental science datasets for AI-readiness using the **FAIR4AI-Bio checklist**. The agent reads a dataset's landing page or local metadata files, rates each of the 89 checklist items as *meets / partial / does not meet / N/A* (judged against each item's `Requirement Definition` and the section-level guidance in `RATING_RUBRIC.md`), and produces a structured JSON report with **two reproducible assessments** — **Traditional FAIR** (Findable, Accessible, Interoperable, Reusable + an overall) and **AI-FAIR** (ML-ready, AI-ready for task, Traceable, CARE compliance + an overall) — each score in **0–1, where 1 is "most FAIR4AI"**, computed by the `fair4ai-scoring` skill.
+An AI agent that evaluates biodiversity, ecology, and environmental science datasets for AI-readiness using the **FAIR4AI-Bio checklist**. The agent reads a dataset's landing page or local metadata files, rates each of the 89 checklist items as *meets / partial / does not meet / N/A* (judged against each item's `Requirement Definition` and the section-level guidance in `RATING_RUBRIC.md`), and produces a structured JSON report with **two reproducible assessments** — **Traditional FAIR** (Findable, Accessible, Interoperable, Reusable + an overall) and **AI-FAIR** (ML-ready, AI-ready for task, Traceable, CARE compliance + an overall) — each score in **0–1, where 1 is "most AI-FAIR"**, computed by the `fair4ai-scoring` skill.
 
 The core thesis: **FAIR compliance is necessary but not sufficient for AI-ready data.** Reporting FAIR and AI-FAIR side by side makes that gap measurable.
 
 See `example_outputs/` for complete evaluation reports for two example datasets — a NEON observational dataset (ground beetles) and the TreeOfLife-200M image corpus (Hugging Face).
+
+<img width="2034" height="1187" alt="AI-FAIR_evaluator-flow: each AI-FAIR criterion is rated as meets, partial, does not meet, or N/A (excluded), then ratings are distributed to the derived categories (ml_ready, ai_ready_for_task, traceable, and ethical_care_compliance) for scoring, giving an overall evaluation of FAIR and AI-FAIR" src="https://github.com/user-attachments/assets/977015e5-7c8d-4c7a-8461-435eda6865e7" />
 
 ---
 
@@ -170,7 +171,7 @@ See `example_outputs/` for complete examples.
 | `skills/summarize-outputs/SKILL.md` | The `summarize-outputs` skill: compile any results directory → scores CSV + figure + report (dedups reruns) |
 | `scripts/build_response_scaffold.py` | Builds the 89-item evaluation scaffold JSON with verbatim checklist fields, plus a compact per-section rating guide (stdlib-only) |
 | `scripts/merge_ratings.py` | Merges per-section ratings into the scaffold in place, with status validation and the "Never NA" guard (stdlib-only) |
-| `scripts/compute_fair4ai_scores.py` | Deterministic 0–1 FAIR4AI scoring tool (stdlib-only) |
+| `scripts/compute_fair4ai_scores.py` | Deterministic 0–1 AI-FAIR scoring tool (stdlib-only) |
 | `scripts/compile_fair4ai_results.py` | Compiles a folder of evaluation JSONs into a scores CSV + aggregates, including each evaluation's agent version (stdlib-only) |
 | `scripts/fair4ai_version.py` | Reads the agent version and builds the `session.agent_provenance` stamp used by the scripts above (stdlib-only) |
 | `scripts/make_fair4ai_figure.py` | Renders the 5×2 two-column (left = FAIR, right = AI-FAIR) score-distribution figure (needs numpy + matplotlib) |
@@ -178,7 +179,7 @@ See `example_outputs/` for complete examples.
 | `example_inputs/` | Sample batch input lists (`.csv` and `.md`) for `batch-evaluate-datasets`, and example metadata folders |
 | `VERSION.txt` | The agent version (semantic versioning), stamped into every evaluation |
 | `CHANGELOG.md` | What changed in each agent version, and the versioning policy |
-| `CHECKLIST.csv` | 89-item FAIR4AI-Bio checklist (9 sections; each item carries a `Requirement Definition` and a per-item `Scoring: NA` condition, and is mapped to EML, DataCite, Schema.org, Croissant, its FAIR4AI dimension(s), and its Structural/Scientific/Provenance/Governance AI FAIR criteria). The meets/partial/does-not-meet judgment is guided by `RATING_RUBRIC.md` §4. |
+| `CHECKLIST.csv` | 89-item FAIR4AI-Bio checklist (9 sections; each item carries a `Requirement Definition` and a per-item `Scoring: NA` condition, and is mapped to EML, DataCite, Schema.org, Croissant, its AI-FAIR dimension(s), and its Structural/Scientific/Provenance/Governance AI FAIR criteria). The meets/partial/does-not-meet judgment is guided by `RATING_RUBRIC.md` §4. |
 | `RATING_RUBRIC.md` | Authority for choosing each item's `meets / partial / does not meet / N/A` status |
 | `CHECKLIST_OVERVIEW.md` | Narrative description of all 9 checklist sections |
 | `QUICKSTART.md` | Step-by-step usage guide with example sessions |
@@ -204,6 +205,8 @@ See `example_outputs/` for complete examples.
 
 ## Related
 
-This agent was split out of the `fair4ai-eval-agent/` folder of the working group's [FAIR4AI-checklists](https://github.com/FAIR4AI-Bio/FAIR4AI-checklists) repository, which holds the FAIR4AI / AI-ready definitions and the checklist-development notes (`agent_and_checklist_review/`) cited in `RATING_RUBRIC.md`.
+This agent was split out of the `fair4ai-eval-agent/` folder of the working group's [FAIR4AI-checklists](https://github.com/FAIR4AI-Bio/FAIR4AI-checklists) repository, which holds the AI-FAIR / AI-ready definitions and the checklist-development notes (`agent_and_checklist_review/`) cited in `RATING_RUBRIC.md`.
 
 When you develop from a clone, run folders the skills create at the repository root (`fair4ai_run_*/`, `batch_run_*/`, `TEST_OUTPUT/`, a root-level `retrieved_metadata/` or `evaluate_progress.md`) are git-ignored, as is the machine-specific `.claude/settings.local.json`.
+
+[_From FAIR to AI-FAIR Metadata-First Infrastructure for AI-Enabled Science_](https://arxiv.org/abs/2611.03327) by Elizabeth G. Campolongo, Eric R. Sokol, Marty Downs, Gina Glenne, Gregory E. Maurer, Sydne Record, Dustin R. Rubenstein, Matthew J. Thompson, Christine Laney, Hilmar Lapp, Max Tarjan, and Tanya Berger-Wolf <https://doi.org/10.48550/arXiv.2611.03327>
