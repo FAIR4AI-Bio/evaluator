@@ -1,6 +1,6 @@
 # AI-FAIR Dataset Evaluation Agent (`evaluator`) [![DOI](https://zenodo.org/badge/1419294252.svg)](https://doi.org/10.5281/zenodo.23744163) [![arXiv](https://img.shields.io/badge/arXiv-2611.03327-b31b1b.svg)](https://arxiv.org/abs/2611.03327)
 
-Repository for the AI-FAIR evaluation agentic workflow, maintained by the [FAIR4AI-Bio](https://github.com/FAIR4AI-Bio) working group.
+Repository for the AI-FAIR evaluation agentic workflow, maintained by the [FAIR4AI-Bio](https://github.com/FAIR4AI-Bio) checklist working group.
 
 An AI agent that evaluates biodiversity, ecology, and environmental science datasets for AI-readiness using the **FAIR4AI-Bio checklist**. The agent reads a dataset's landing page or local metadata files, rates each of the 89 checklist items as *meets / partial / does not meet / N/A* (judged against each item's `Requirement Definition` and the section-level guidance in `RATING_RUBRIC.md`), and produces a structured JSON report with **two reproducible assessments** — **Traditional FAIR** (Findable, Accessible, Interoperable, Reusable + an overall) and **AI-FAIR** (ML-ready, AI-ready for task, Traceable, CARE compliance + an overall) — each score in **0–1, where 1 is "most AI-FAIR"**, computed by the `fair4ai-scoring` skill.
 
