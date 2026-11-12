@@ -207,6 +207,8 @@ See `example_outputs/` for complete examples.
 
 This agent was split out of the `fair4ai-eval-agent/` folder of the working group's [FAIR4AI-checklists](https://github.com/FAIR4AI-Bio/FAIR4AI-checklists) repository, which holds the AI-FAIR / AI-ready definitions and the checklist-development notes (`agent_and_checklist_review/`) cited in `RATING_RUBRIC.md`.
 
+[Community checklist evaluation](https://docs.google.com/document/d/1QwHmlfUzUAKok_At20dW5_nYxcOzJ1fBmbhZhclYpeo/edit?usp=drivesdk): Feedback welcomed on the underlying FAIR4AI-Bio Checklist. 
+
 When you develop from a clone, run folders the skills create at the repository root (`fair4ai_run_*/`, `batch_run_*/`, `TEST_OUTPUT/`, a root-level `retrieved_metadata/` or `evaluate_progress.md`) are git-ignored, as is the machine-specific `.claude/settings.local.json`.
 
 [_From FAIR to AI-FAIR Metadata-First Infrastructure for AI-Enabled Science_](https://arxiv.org/abs/2611.03327) by Elizabeth G. Campolongo, Eric R. Sokol, Marty Downs, Gina Glenne, Gregory E. Maurer, Sydne Record, Dustin R. Rubenstein, Matthew J. Thompson, Christine Laney, Hilmar Lapp, Max Tarjan, and Tanya Berger-Wolf <https://doi.org/10.48550/arXiv.2611.03327>
