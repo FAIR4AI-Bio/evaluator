@@ -9,6 +9,7 @@ The core thesis: **FAIR compliance is necessary but not sufficient for AI-ready 
 See `example_outputs/` for complete evaluation reports for two example datasets — a NEON observational dataset (ground beetles) and the TreeOfLife-200M image corpus (Hugging Face).
 
 <img width="2034" height="1187" alt="AI-FAIR_evaluator-flow: each AI-FAIR criterion is rated as meets, partial, does not meet, or N/A (excluded), then ratings are distributed to the derived categories (ml_ready, ai_ready_for_task, traceable, and ethical_care_compliance) for scoring, giving an overall evaluation of FAIR and AI-FAIR" src="https://github.com/user-attachments/assets/977015e5-7c8d-4c7a-8461-435eda6865e7" />
+<sup><i><b>AI-FAIR Evaluator Flow:</b> figure introduced in https://doi.org/10.48550/arXiv.2611.03327</i>.</sup>
 
 ---
 
