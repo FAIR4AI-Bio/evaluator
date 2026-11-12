@@ -2,7 +2,7 @@
 
 Repository for the AI-FAIR evaluation agentic workflow, maintained by the [FAIR4AI-Bio](https://github.com/FAIR4AI-Bio) checklist working group.
 
-An AI agent that evaluates biodiversity, ecology, and environmental science datasets for AI-readiness using the **FAIR4AI-Bio checklist**. The agent reads a dataset's landing page or local metadata files, rates each of the 89 checklist items as *meets / partial / does not meet / N/A* (judged against each item's `Requirement Definition` and the section-level guidance in `RATING_RUBRIC.md`), and produces a structured JSON report with **two reproducible assessments** — **Traditional FAIR** (Findable, Accessible, Interoperable, Reusable + an overall) and **AI-FAIR** (ML-ready, AI-ready for task, Traceable, CARE compliance + an overall) — each score in **0–1, where 1 is "most AI-FAIR"**, computed by the `fair4ai-scoring` skill.
+An AI agent that evaluates biodiversity, ecology, and environmental science datasets for AI-readiness using the **FAIR4AI-Bio checklist**. The agent reads a dataset's landing page or local metadata files, rates each of the checklist items as *meets / partial / does not meet / N/A* (judged against each item's `Requirement Definition` and the section-level guidance in `RATING_RUBRIC.md`), and produces a structured JSON report with **two reproducible assessments** — **Traditional FAIR** (Findable, Accessible, Interoperable, Reusable + an overall) and **AI-FAIR** (ML-ready, AI-ready for task, Traceable, CARE compliance + an overall) — each score in **0–1, where 1 is "most AI-FAIR"**, computed by the `fair4ai-scoring` skill.
 
 The core thesis: **FAIR compliance is necessary but not sufficient for AI-ready data.** Reporting FAIR and AI-FAIR side by side makes that gap measurable.
 
